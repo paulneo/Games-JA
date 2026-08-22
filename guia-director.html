@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fuego Cruzado — pistas y respuestas</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@300;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --noche:#141033; --noche-alta:#221B4F; --noche-borde:#39307A;
+  --cochinilla:#E8385F; --oro:#F2B705; --turquesa:#2ED3B7; --lila:#8B7BF0; --hueso:#F6F0E4;
+  --display:'Archivo Black','Arial Black',Impact,system-ui,sans-serif;
+  --cuerpo:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'Space Mono','Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{background:#141033}
+body{background:#141033;color:#F6F0E4;font-family:var(--cuerpo);min-height:100vh;padding-bottom:3rem;-webkit-text-size-adjust:100%}
+button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;text-align:left}
+button:focus-visible,input:focus-visible{outline:3px solid var(--oro);outline-offset:2px}
+
+.tope{position:sticky;top:0;z-index:10;background:#141033;border-bottom:1px solid var(--noche-borde);padding:.8rem 1rem .7rem}
+.tope h1{font-family:var(--display);font-size:1.15rem;line-height:1.1}
+.tope h1 em{font-style:normal;color:var(--oro)}
+.tope .sub{font-family:var(--mono);font-size:.6rem;color:var(--lila);letter-spacing:.16em;margin-top:2px}
+.busca{display:flex;gap:.5rem;margin-top:.7rem}
+.busca input{
+  flex:1;background:var(--noche-alta);border:2px solid var(--noche-borde);border-radius:10px;
+  color:var(--hueso);font-family:var(--cuerpo);font-size:1rem;padding:.6rem .8rem;min-width:0;
+}
+.busca input::placeholder{color:#7E76B8}
+.mini{background:var(--noche-alta);border:2px solid var(--noche-borde);border-radius:10px;padding:.6rem .8rem;font-family:var(--mono);font-size:.7rem;white-space:nowrap;text-align:center}
+.mini.on{background:var(--oro);border-color:var(--oro);color:#241B00;font-weight:700}
+
+.envoltura{padding:1rem}
+.cat{margin-bottom:.7rem;border:2px solid var(--noche-borde);border-radius:14px;overflow:hidden;background:var(--noche-alta)}
+.cat-tope{display:flex;align-items:center;gap:.7rem;width:100%;padding:.9rem 1rem;background:var(--noche-alta)}
+.cat-tope .nom{font-family:var(--display);font-size:1rem;flex:1;line-height:1.15}
+.cat-tope .flecha{font-family:var(--mono);color:var(--lila);font-size:1.1rem;transition:transform .2s}
+.cat.abierta .cat-tope{background:var(--lila);color:var(--noche)}
+.cat.abierta .flecha{transform:rotate(90deg);color:var(--noche)}
+.cuerpo{display:none;padding:.6rem}
+.cat.abierta .cuerpo{display:block}
+
+.item{border-radius:12px;background:#1B1642;border:1px solid var(--noche-borde);padding:.85rem;margin-bottom:.55rem}
+.item:last-child{margin-bottom:0}
+.meta{display:flex;align-items:center;gap:.55rem;margin-bottom:.45rem}
+.pts{font-family:var(--mono);font-weight:700;font-size:.9rem;color:var(--v,var(--oro));border:2px solid var(--v,var(--oro));border-radius:6px;padding:.1rem .5rem}
+.rombos{font-size:.62rem;letter-spacing:.12em}
+.q{font-size:1.02rem;font-weight:500;line-height:1.35}
+.acciones{display:flex;gap:.5rem;margin-top:.7rem}
+.acciones button{
+  flex:1;border-radius:9px;padding:.55rem;font-family:var(--mono);font-size:.72rem;
+  text-align:center;border:2px solid var(--noche-borde);
+}
+.b-pista{color:var(--turquesa);border-color:rgba(46,211,183,.5)}
+.b-pista.on{background:var(--turquesa);color:#062B25;border-color:var(--turquesa);font-weight:700}
+.b-resp{color:var(--oro);border-color:rgba(242,183,5,.5)}
+.b-resp.on{background:var(--oro);color:#241B00;border-color:var(--oro);font-weight:700}
+
+.revela{display:none;margin-top:.6rem;padding:.65rem .8rem;border-radius:9px;font-size:.95rem;line-height:1.4}
+.revela.viva{display:block}
+.pista-txt{background:rgba(46,211,183,.1);border-left:3px solid var(--turquesa)}
+.pista-txt b{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:var(--turquesa);display:block;margin-bottom:.2rem;font-weight:400}
+.resp-txt{background:rgba(242,183,5,.1);border-left:3px solid var(--oro);font-weight:700}
+.cita-g{display:block;font-family:var(--mono);font-size:.78rem;font-weight:400;letter-spacing:.06em;color:var(--oro);margin-top:.35rem;opacity:.9}
+.cita-g::before{content:"📖 "}
+.resp-txt b{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:var(--oro);display:block;margin-bottom:.2rem;font-weight:400}
+
+.vacio{text-align:center;color:#8B84C4;padding:2rem 1rem;font-size:.9rem}
+.nota{text-align:center;color:#7E76B8;font-size:.75rem;line-height:1.5;padding:1rem}
+@media(min-width:700px){.envoltura{max-width:760px;margin:0 auto}}
+</style>
+</head>
+<body>
+
+<div class="tope">
+  <h1>FUEGO CRUZADO · <em>PISTAS Y RESPUESTAS</em></h1>
+  <div class="sub">SOLO PARA EL QUE DIRIGE</div>
+  <div class="busca">
+    <input id="q" type="search" placeholder="Buscar pregunta, tema o cita..." autocomplete="off">
+    <button class="mini" data-a="todo" id="btn-todo">ABRIR TODO</button>
+  </div>
+</div>
+
+<div class="envoltura" id="lista"></div>
+<p class="nota">Reina-Valera 1960 · 65 preguntas · Las pistas acercan sin regalar la respuesta.<br>Toca una categoría para abrirla.</p>
+
+<script>
+(function(){
+"use strict";
+/* [categoría, [[pregunta, pista, respuesta, cita], x4 en orden 100/200/300/400]] */
+var BANCO=[
+['PERSONAJES',[
+ ['En Éxodo 3, ¿cómo se llamaba el suegro de Moisés, sacerdote de Madián?','Le aconsejó nombrar jueces para no agotarse juzgando solo al pueblo.','Jetro, también llamado Reuel','Éxodo 3:1; 2:18'],
+ ['En 2 Timoteo 1, Pablo nombra a la abuela y a la madre de Timoteo. ¿Cómo se llamaban?','Elogia la fe no fingida que pasó de una generación a la siguiente.','Loida y Eunice','2 Timoteo 1:5'],
+ ['En Génesis 5, ¿quién fue el padre de Matusalén?','Vivió 365 años, caminó con Dios y fue traspuesto sin ver muerte.','Enoc','Génesis 5:21-24'],
+ ['En 1 Samuel 22, ¿qué edomita mató a los ochenta y cinco sacerdotes de Nob?','Era el principal de los pastores de Saúl y el único que se atrevió.','Doeg','1 Samuel 22:18'],
+ ['En 2 Samuel 23, ¿quién mató a un león dentro de un foso en un día de nieve?','Fue jefe de la guardia de David y también venció a dos leones de Moab.','Benaía, hijo de Joiada','2 Samuel 23:20']]],
+['LUGARES',[
+ ['En Apocalipsis 1, ¿en qué isla estaba Juan cuando recibió la visión?','Una isla del mar Egeo que Roma usaba para desterrar presos.','Patmos','Apocalipsis 1:9'],
+ ['En Hechos 11, ¿en qué ciudad empezaron a llamar "cristianos" a los discípulos?','Capital de Siria; de ahí salió Pablo a sus viajes misioneros.','Antioquía','Hechos 11:26'],
+ ['En Hechos 17, ¿en qué ciudad encontró Pablo un altar al "Dios no conocido"?','Habló en el Areópago, rodeado de filósofos epicúreos y estoicos.','Atenas','Hechos 17:22-23'],
+ ['En Hechos 13, ¿en qué ciudad de Chipre dejó Pablo ciego al mago Barjesús?','Era la capital de la isla y allí creyó el procónsul Sergio Paulo.','Pafos','Hechos 13:6-12'],
+ ['En Josué 14, ¿cómo se llamaba Hebrón antiguamente?','El nombre viene de Arba, un hombre grande entre los anaceos.','Quiriat-arba','Josué 14:15']]],
+['NÚMEROS',[
+ ['En Mateo 4, ¿cuántos días y noches ayunó Jesús en el desierto?','El mismo número de días que llovió en el diluvio.','40 días y 40 noches','Mateo 4:2'],
+ ['En Daniel 8, ¿de cuántas tardes y mañanas es la profecía más larga del libro?','De esa cifra sale la fecha de 1844 y la doctrina del santuario.','2300 tardes y mañanas','Daniel 8:14'],
+ ['En Jeremías 25, ¿cuántos años de cautiverio en Babilonia se anunciaron?','Daniel estaba leyendo esa profecía cuando recibió la de las 70 semanas.','70 años','Jeremías 25:11-12; 29:10'],
+ ['En 2 Samuel 24, ¿cuántos hombres contó Joab en Israel y cuántos en Judá?','Uno de los dos números pasa del medio millón; el otro no llega.','800.000 en Israel y 500.000 en Judá','2 Samuel 24:9'],
+ ['En Jueces 12, ¿cuántos efrateos murieron por no poder pronunciar "Shibolet"?','Decían "Sibolet" y eso los delataba en los vados del Jordán.','42.000','Jueces 12:6']]],
+['MILAGROS',[
+ ['En Juan 2, ¿cuál fue el primer milagro de Jesús y en qué pueblo ocurrió?','Fue en una boda y su madre se lo pidió.','Convirtió agua en vino, en Caná de Galilea','Juan 2:1-11'],
+ ['En 2 Reyes 6, ¿qué profeta hizo que un hacha de hierro flotara en el agua?','Echó un palo al Jordán y el hierro subió a la superficie.','Eliseo','2 Reyes 6:1-7'],
+ ['En 2 Reyes 20, ¿a qué rey enfermo le retrocedió diez grados la sombra?','Dios le añadió quince años de vida después de su oración.','Ezequías','2 Reyes 20:9-11'],
+ ['En Daniel 3, ¿qué les ocurrió a los soldados que echaron a los tres hebreos al horno?','El milagro tuvo víctimas que casi nadie recuerda.','Murieron quemados por la llama del fuego','Daniel 3:22'],
+ ['En 2 Reyes 13, ¿qué le pasó al muerto que echaron en el sepulcro de Eliseo?','Lo echaron ahí a la carrera, huyendo de una banda de moabitas.','Revivió y se puso en pie al tocar los huesos','2 Reyes 13:20-21']]],
+['VERSÍCULOS',[
+ ['En Hebreos 11, completa: "Es, pues, la fe la certeza de lo que se espera,..."','Está en el primer versículo del capítulo de los héroes de la fe.','...la convicción de lo que no se ve','Hebreos 11:1'],
+ ['¿En qué evangelio y capítulo dijo Jesús "Escudriñad las Escrituras"?','Añadió: "ellas son las que dan testimonio de mí".','En Juan, capítulo 5','Juan 5:39'],
+ ['En 2 Timoteo 3, completa: "Toda la Escritura es inspirada por Dios, y útil para..."','Son cuatro cosas seguidas y la última termina en "justicia".','...enseñar, redargüir, corregir e instruir en justicia','2 Timoteo 3:16'],
+ ['¿En qué profeta menor está "Jehová está en su santo templo, calle delante de él toda la tierra"?','Su libro tiene solo tres capítulos y termina con una oración cantada.','Habacuc','Habacuc 2:20'],
+ ['En la epístola de Judas, ¿por el cuerpo de quién disputaron Miguel y el diablo?','Miguel no lo maldijo, sino que dijo: "El Señor te reprenda".','Por el cuerpo de Moisés','Judas 9']]],
+['EL SÁBADO',[
+ ['En Marcos 2, ¿qué hacían los discípulos cuando los fariseos los acusaron en sábado?','Jesús respondió recordando lo que hizo David con los panes de la proposición.','Arrancaban espigas al pasar por los sembrados','Marcos 2:23-28'],
+ ['Según Isaías 66, ¿cada cuánto irán todos a adorar delante de Dios en la nueva tierra?','El texto lo dice junto con "de mes en mes".','De sábado en sábado','Isaías 66:22-23'],
+ ['En Ezequiel 20, ¿qué dice Dios que es el sábado para su pueblo?','La palabra clave es "señal", y el verbo final es "santifica".','Una señal, para que supieran que Jehová los santifica','Ezequiel 20:12, 20'],
+ ['En Éxodo 16, ¿cuánto maná debía recoger el pueblo el día sexto?','Lo que guardaban para el séptimo día no se corrompía, a diferencia de los otros días.','El doble: dos gomeres por persona','Éxodo 16:22-26'],
+ ['En Números 15, ¿qué le ocurrió al hombre hallado recogiendo leña en sábado?','Lo tuvieron preso porque no sabían qué hacer con él, hasta que Dios lo dijo.','Fue apedreado, por orden de Jehová','Números 15:32-36']]],
+['DANIEL',[
+ ['En Daniel 2, ¿de qué eran los pies de la estatua del sueño de Nabucodonosor?','Dos materiales que no se pegan entre sí: los reinos divididos.','Hierro mezclado con barro cocido','Daniel 2:33, 41-43'],
+ ['Según Daniel 8:14, ¿qué ocurriría al final de los 2300 días?','El verbo hebreo también se traduce como "justificado" o restaurado.','"Será purificado el santuario"','Daniel 8:14'],
+ ['En Daniel 4, ¿qué comió Nabucodonosor durante los siete tiempos de su locura?','Su cabello creció como plumas de águila y sus uñas como las de las aves.','Hierba del campo, como los bueyes','Daniel 4:33'],
+ ['En Daniel 10, ¿qué príncipe celestial vino a ayudar al ángel detenido en Persia?','Se le llama "uno de los principales príncipes" y reaparece en Daniel 12.','Miguel','Daniel 10:13, 21'],
+ ['En Daniel 6, ¿cuántos sátrapas puso Darío sobre todo el reino?','Sobre ellos había tres gobernadores, y Daniel era uno de esos tres.','120','Daniel 6:1-2']]],
+['APOCALIPSIS',[
+ ['En Apocalipsis 21, ¿de qué están hechas las doce puertas de la nueva Jerusalén?','Cada puerta es una sola pieza, no un conjunto.','De perlas: cada puerta, una perla','Apocalipsis 21:21'],
+ ['Según Apocalipsis 14:12, ¿qué dos cosas distinguen a los santos?','Obediencia y confianza, siempre juntas en el mismo versículo.','Guardan los mandamientos de Dios y la fe de Jesús','Apocalipsis 14:12'],
+ ['En Apocalipsis 20, ¿cuánto tiempo estará Satanás atado?','El mismo plazo que reinan con Cristo los resucitados de la primera resurrección.','Mil años','Apocalipsis 20:2-3'],
+ ['En Apocalipsis 1, nombra las siete iglesias en su orden.','La primera dejó su primer amor y la última es la tibia.','Éfeso, Esmirna, Pérgamo, Tiatira, Sardis, Filadelfia y Laodicea','Apocalipsis 1:11'],
+ ['En Apocalipsis 7, ¿cuál es la primera tribu nombrada al sellar a los 144.000?','No es Rubén, aunque era el primogénito: es la tribu del León.','Judá','Apocalipsis 7:5']]],
+['EL SANTUARIO',[
+ ['En 1 Reyes 8, ¿qué había dentro del arca del pacto?','El texto insiste en la palabra "solamente": no había nada más.','Solamente las dos tablas de piedra','1 Reyes 8:9'],
+ ['En Éxodo 30, ¿qué mueble mandó Dios colocar delante del velo del Lugar Santísimo?','De ahí subía el humo que representa las oraciones de los santos.','El altar del incienso','Éxodo 30:1-6'],
+ ['En Éxodo 25, ¿cuántas lámparas y cuántos brazos tenía el candelero?','Tres brazos de un lado, tres del otro, más el tronco del centro.','Siete lámparas sobre seis brazos y el tronco central','Éxodo 25:31-37'],
+ ['En Éxodo 27, ¿qué medidas tenía el atrio del tabernáculo?','El largo era exactamente el doble del ancho, medido en codos.','Cien codos de largo por cincuenta de ancho','Éxodo 27:18'],
+ ['En Levítico 16, ¿qué se hacía con el macho cabrío de Azazel en el Día de la Expiación?','No se sacrificaba: se le imponían las culpas y salía de en medio del campamento.','Se enviaba vivo al desierto','Levítico 16:10, 21-22']]],
+['SALUD Y VIDA',[
+ ['¿En qué libros de Moisés está la lista de animales limpios e inmundos?','Hablan de la pezuña hendida y de rumiar.','En Levítico 11 y Deuteronomio 14','Levítico 11:1-47'],
+ ['Según Génesis 1:29, ¿qué le dio Dios al ser humano para comer al principio?','Antes del diluvio no se menciona comer carne.','Toda planta que da semilla y todo árbol que da fruto','Génesis 1:29'],
+ ['En Hechos 15, ¿de qué cuatro cosas pidió el concilio de Jerusalén que se apartaran los gentiles?','Tres tienen que ver con la comida y una con la conducta.','Lo sacrificado a ídolos, la sangre, lo ahogado y la fornicación','Hechos 15:28-29'],
+ ['En Levítico 3, ¿qué dos cosas prohibió Dios comer como estatuto perpetuo?','Una es un tipo de grasa y la otra corre por las venas.','Ninguna grosura y ninguna sangre','Levítico 3:17'],
+ ['En Números 11, ¿qué cinco comidas de Egipto echaba de menos el pueblo?','También recordaban el pescado que allá comían de balde.','Pepinos, melones, puerros, cebollas y ajos','Números 11:5']]],
+['VIDA DE JESÚS',[
+ ['En Mateo 26, ¿en qué huerto oró Jesús antes de ser entregado?','Al pie del monte de los Olivos; allí su sudor fue como sangre.','Getsemaní','Mateo 26:36'],
+ ['Según Juan 19, ¿qué dijo Jesús justo antes de morir?','En griego es una sola palabra: tetélestai.','"Consumado es"','Juan 19:30'],
+ ['Según Hechos 1, ¿cuántos días estuvo Jesús con los discípulos después de resucitar?','El mismo número que sus días de ayuno en el desierto.','40 días','Hechos 1:3'],
+ ['En Mateo 27, ¿entre qué horas hubo tinieblas sobre toda la tierra?','Fueron tres horas, contadas al modo judío.','Desde la hora sexta hasta la hora novena','Mateo 27:45'],
+ ['En Lucas 3, ¿quién era tetrarca de Iturea cuando Juan el Bautista empezó a predicar?','El capítulo nombra al emperador, al gobernador y a tres tetrarcas.','Felipe, hermano de Herodes','Lucas 3:1']]],
+['MUJERES',[
+ ['En Jueces 4, ¿qué mujer fue jueza y profetisa en Israel?','Juzgaba bajo una palmera y acompañó a Barac a la batalla.','Débora','Jueces 4:4-9'],
+ ['En Hechos 16, ¿qué mujer que vendía púrpura fue la primera en creer en Filipos?','Era de Tiatira y hospedó a Pablo y Silas en su casa.','Lidia','Hechos 16:14-15'],
+ ['En Lucas 2, ¿qué profetisa anciana reconoció al niño Jesús en el templo?','Era hija de Fanuel, de la tribu de Aser, y no se apartaba del templo.','Ana','Lucas 2:36-38'],
+ ['En Éxodo 1, ¿cómo se llamaban las dos parteras hebreas que desobedecieron a Faraón?','Temieron a Dios y dejaron con vida a los niños varones.','Sifra y Fúa','Éxodo 1:15-17'],
+ ['En 2 Reyes 11, ¿qué mujer usurpó el trono de Judá y mató a la descendencia real?','El niño Joás se salvó escondido seis años en el templo.','Atalía','2 Reyes 11:1-3']]],
+['IGLESIA PRIMITIVA',[
+ ['En Hechos 8, ¿quién bautizó al eunuco etíope?','El etíope venía leyendo Isaías 53 en su carro.','Felipe','Hechos 8:26-39'],
+ ['En Hechos 5, ¿qué matrimonio mintió al Espíritu Santo?','Vendieron una heredad y retuvieron parte del precio.','Ananías y Safira','Hechos 5:1-11'],
+ ['En Hechos 10, ¿qué centurión romano fue bautizado por Pedro en Cesarea?','Un ángel le habló y Pedro tuvo la visión del lienzo antes de ir a su casa.','Cornelio','Hechos 10:1-48'],
+ ['En Romanos 16, ¿quién escribió materialmente la carta al dictado de Pablo?','Se cuela en el capítulo final para mandar su propio saludo.','Tercio','Romanos 16:22'],
+ ['En Hechos 12, ¿cómo se llamaba la muchacha que reconoció la voz de Pedro y lo dejó afuera?','De pura alegría no abrió la puerta y corrió a avisar a los demás.','Rode','Hechos 12:13-16']]]
+];
+var VALORES=[200,300,500,800,1000];
+var TONOS=['#2ED3B7','#A8D83A','#F2B705','#F2760B','#E8385F'];
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function limpia(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+
+var abiertas={},filtro='',todoAbierto=false;
+
+function pintar(){
+  var h='',c,f,cat,it,rom,i,hay=false,coincide,textos;
+  for(c=0;c<BANCO.length;c++){
+    cat=BANCO[c];
+    var filas='',cuantas=0;
+    for(f=0;f<5;f++){
+      it=cat[1][f];
+      textos=limpia(cat[0]+' '+it[0]+' '+it[1]+' '+it[2]+' '+it[3]);
+      coincide=!filtro||textos.indexOf(filtro)>=0;
+      if(!coincide)continue;
+      cuantas++;
+      rom='';for(i=0;i<=f;i++)rom+='◆';
+      filas+='<div class="item">'+
+        '<div class="meta"><span class="pts" style="--v:'+TONOS[f]+'">'+VALORES[f]+'</span><span class="rombos" style="color:'+TONOS[f]+'">'+rom+'</span></div>'+
+        '<div class="q">'+esc(it[0])+'</div>'+
+        '<div class="acciones">'+
+          '<button class="b-pista" data-a="tog" data-t="p" data-k="'+c+'-'+f+'">VER PISTA</button>'+
+          '<button class="b-resp" data-a="tog" data-t="r" data-k="'+c+'-'+f+'">VER RESPUESTA</button>'+
+        '</div>'+
+        '<div class="revela pista-txt" id="p'+c+'-'+f+'"><b>PISTA</b>'+esc(it[1])+'</div>'+
+        '<div class="revela resp-txt" id="r'+c+'-'+f+'"><b>RESPUESTA</b>'+esc(it[2])+
+          '<span class="cita-g">'+esc(it[3])+'</span></div>'+
+      '</div>';
+    }
+    if(!cuantas)continue;
+    hay=true;
+    var ab=filtro?true:!!abiertas[c];
+    h+='<div class="cat'+(ab?' abierta':'')+'">'+
+       '<button class="cat-tope" data-a="cat" data-c="'+c+'">'+
+         '<span class="nom">'+cat[0]+'</span><span class="flecha">›</span></button>'+
+       '<div class="cuerpo">'+filas+'</div></div>';
+  }
+  document.getElementById('lista').innerHTML=hay?h:'<p class="vacio">Nada coincide con esa búsqueda. Prueba con otra palabra o una cita como "Daniel 8".</p>';
+}
+
+document.addEventListener('click',function(ev){
+  var el=ev.target;
+  while(el&&el.getAttribute){
+    var a=el.getAttribute('data-a');
+    if(a==='cat'){
+      var c=el.getAttribute('data-c');
+      abiertas[c]=!abiertas[c];
+      pintar();return;
+    }
+    if(a==='tog'){
+      var caja=document.getElementById(el.getAttribute('data-t')+el.getAttribute('data-k'));
+      var viva=caja.className.indexOf('viva')>=0;
+      caja.className=caja.className.replace(' viva','')+(viva?'':' viva');
+      el.className=el.className.replace(' on','')+(viva?'':' on');
+      return;
+    }
+    if(a==='todo'){
+      todoAbierto=!todoAbierto;
+      for(var i=0;i<BANCO.length;i++)abiertas[i]=todoAbierto;
+      document.getElementById('btn-todo').textContent=todoAbierto?'CERRAR TODO':'ABRIR TODO';
+      document.getElementById('btn-todo').className=todoAbierto?'mini on':'mini';
+      pintar();return;
+    }
+    el=el.parentNode;
+  }
+});
+document.getElementById('q').addEventListener('input',function(e){
+  filtro=limpia(e.target.value.trim());
+  pintar();
+});
+
+pintar();
+})();
+</script>
+</body>
+</html>
