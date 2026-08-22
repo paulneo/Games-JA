@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fuego Cruzado — juego para pantalla</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@300;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --noche:#141033; --noche-alta:#221B4F; --noche-borde:#39307A;
+  --cochinilla:#E8385F; --oro:#F2B705; --turquesa:#2ED3B7; --lila:#8B7BF0; --hueso:#F6F0E4;
+  --display:'Archivo Black','Arial Black',Impact,system-ui,sans-serif;
+  --cuerpo:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'Space Mono','Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:#141033}
+body{
+  background:#141033;color:#F6F0E4;font-family:var(--cuerpo);
+  min-height:100vh;-webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;text-align:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--oro);outline-offset:3px}
+
+.app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+
+#error{
+  display:none;background:var(--cochinilla);color:#fff;padding:.7rem 1rem;
+  font-family:var(--mono);font-size:.78rem;line-height:1.4;
+}
+
+.barra{display:flex;align-items:center;gap:1rem;padding:.7rem clamp(.8rem,2vw,1.8rem);border-bottom:1px solid var(--noche-borde);flex-wrap:wrap}
+.marca{display:flex;align-items:center;gap:.6rem;flex-shrink:0}
+.escudo{width:30px;height:30px;flex-shrink:0}
+.marca b{font-family:var(--display);font-size:clamp(.8rem,1.4vw,1.1rem);letter-spacing:.02em;display:block;line-height:1.05}
+.marca span{font-family:var(--mono);font-size:.6rem;color:var(--lila);letter-spacing:.16em;display:block;margin-top:-2px}
+.reset{margin-left:auto;flex-shrink:0;border:2px solid var(--noche-borde);border-radius:99px;padding:.45rem .85rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#8B84C4;white-space:nowrap}
+.reset:hover{border-color:var(--cochinilla);color:var(--cochinilla)}
+.reset.confirmar{background:var(--cochinilla);border-color:var(--cochinilla);color:#fff;font-weight:700}
+.son{border:2px solid var(--noche-borde);border-radius:99px;width:2.4rem;height:2.4rem;font-size:1.1rem;margin-left:.5rem;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.son:hover{border-color:var(--oro)}
+.son.mudo{opacity:.45}
+.reloj-duelo{font-family:var(--mono);font-weight:700;font-size:clamp(1.8rem,5vw,3rem);color:var(--turquesa);text-align:center;line-height:1;margin-bottom:.8rem}
+.reloj-duelo.urge{color:var(--oro)}
+.reloj-duelo.fin{color:var(--cochinilla);font-family:var(--display);font-size:clamp(1.3rem,3.5vw,2rem)}
+.tie{z-index:70;background:#1A0714}
+.tie .caja{border:3px solid var(--cochinilla);border-radius:18px;padding:clamp(1rem,3vw,2rem);background:rgba(232,56,95,.06)}
+.tie-et{
+  font-family:var(--display);font-size:clamp(.9rem,2.4vw,1.4rem);color:var(--cochinilla);
+  letter-spacing:.06em;margin-bottom:.6rem;
+}
+.final{position:fixed;top:0;left:0;right:0;bottom:0;background:#0A081C;z-index:60;display:none;align-items:flex-start;justify-content:center;padding:clamp(.8rem,3vw,2.5rem);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.final.viva{display:flex}
+.final .caja{width:100%;max-width:900px;text-align:center;margin:auto 0}
+.final h2{font-family:var(--display);font-size:clamp(1.8rem,6vw,3.6rem);color:var(--oro);line-height:1.05;margin-bottom:.3rem}
+.final .sub{font-family:var(--mono);font-size:.7rem;letter-spacing:.2em;color:var(--lila);margin-bottom:1.6rem}
+.podio{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.6rem}
+.pcard{
+  flex:1;min-width:130px;max-width:230px;border:3px solid var(--eq);border-radius:16px;
+  padding:1rem .6rem;background:rgba(255,255,255,.04);
+}
+.pcard.uno{background:var(--eq);color:#141033;transform:scale(1.06)}
+.pcard .pos{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;opacity:.75}
+.pcard .corona{font-size:1.8rem;line-height:1.2}
+.pcard .nom{font-weight:700;font-size:clamp(.85rem,2vw,1.15rem);text-transform:uppercase;margin:.2rem 0;word-break:break-word}
+.pcard .n{font-family:var(--mono);font-weight:700;font-size:clamp(1.8rem,5vw,3rem);line-height:1}
+.tuto{max-width:760px;margin:0 auto;padding-bottom:2rem}
+.tuto-t{font-family:var(--display);font-size:clamp(1rem,2.2vw,1.3rem);color:var(--oro);margin:1.8rem 0 .7rem}
+.tuto-p{font-size:.95rem;line-height:1.6;color:#CFC8F0}
+.aviso-clave{border:2px solid var(--cochinilla);background:rgba(232,56,95,.1);border-radius:14px;padding:1rem 1.1rem;font-size:.95rem;line-height:1.6;color:#F0E8F5}
+.aviso-clave b{display:block;font-family:var(--display);color:var(--cochinilla);margin-bottom:.4rem;font-size:1.05rem}
+.aviso-clave em,.tuto-p em,.pasos em{font-style:normal;color:var(--oro)}
+.pasos{list-style:none;counter-reset:p}
+.pasos li{
+  counter-increment:p;position:relative;padding:.7rem 0 .7rem 2.6rem;
+  font-size:.95rem;line-height:1.55;color:#CFC8F0;border-bottom:1px solid var(--noche-borde);
+}
+.pasos li:last-child{border-bottom:0}
+.pasos li::before{
+  content:counter(p);position:absolute;left:0;top:.65rem;
+  width:1.8rem;height:1.8rem;border-radius:50%;background:var(--lila);color:var(--noche);
+  font-family:var(--mono);font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center;
+}
+.pasos li b,.coms-lista b{color:var(--hueso)}
+.tuto-tabla{width:100%;border-collapse:collapse;font-size:.92rem}
+.tuto-tabla td{padding:.6rem .5rem;border-bottom:1px solid var(--noche-borde);color:#CFC8F0;vertical-align:top}
+.tuto-tabla td:first-child{width:42%;color:var(--hueso)}
+.coms-lista{list-style:none}
+.coms-lista li{display:flex;gap:.8rem;align-items:flex-start;padding:.6rem 0;font-size:.93rem;line-height:1.5;color:#CFC8F0}
+.coms-lista span{font-size:1.4rem;flex-shrink:0;line-height:1.2}
+.guion{
+  border-left:3px solid var(--turquesa);background:rgba(46,211,183,.07);border-radius:0 12px 12px 0;
+  padding:1rem 1.1rem;font-size:.95rem;line-height:1.65;font-style:italic;color:#DCF5EF;
+}
+.tuto kbd{background:var(--noche-alta);border:1px solid var(--noche-borde);border-radius:4px;padding:1px 6px;font-family:var(--mono);font-size:.8rem}
+.marcador{display:flex;gap:.55rem;padding:.6rem clamp(.8rem,2vw,1.8rem);border-bottom:1px solid var(--noche-borde);background:#181341}
+.mcard{
+  flex:1;min-width:0;position:relative;border:3px solid var(--eq);border-radius:14px;
+  padding:.45rem .5rem .55rem;display:flex;flex-direction:column;align-items:center;
+  background:rgba(255,255,255,.04);
+}
+.mcard .nom{
+  font-weight:700;font-size:clamp(.68rem,1.7vw,1.05rem);text-transform:uppercase;letter-spacing:.04em;
+  color:var(--eq);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.mcard .n{font-family:var(--mono);font-weight:700;font-size:clamp(1.9rem,6.5vw,3.6rem);line-height:1.05}
+.mcard.turno{background:var(--eq)}
+.mcard.turno .nom,.mcard.turno .n{color:#141033}
+.mcard .lider{position:absolute;top:-11px;left:50%;margin-left:-.55rem;font-size:1.1rem;line-height:1}
+.mcard.sube{animation:pulso .65s ease}
+@keyframes pulso{0%{transform:scale(1)}30%{transform:scale(1.07)}100%{transform:scale(1)}}
+.marc-velo{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+.marc-velo span{
+  border:2px solid var(--eq);border-radius:99px;padding:.25rem .8rem;
+  font-family:var(--mono);font-size:.85rem;font-weight:700;
+}
+
+.faja{display:flex;align-items:center;gap:3px;height:16px;padding:0 clamp(.8rem,2vw,1.8rem);background:#0F0C28;border-bottom:1px solid var(--noche-borde)}
+.rombo{flex:1;height:11px;background:#2A2358;transition:background .35s;-webkit-clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.rombo.on{background:var(--oro)}
+.rombo.on:nth-child(even){background:var(--cochinilla)}
+.rombo.on:nth-child(3n){background:var(--turquesa)}
+
+main{flex:1;padding:clamp(1rem,3vh,2.2rem) clamp(.9rem,3vw,2.5rem)}
+.pantalla{display:none}
+.pantalla.viva{display:block}
+
+.pie{border-top:1px solid var(--noche-borde);padding:.5rem clamp(.8rem,2vw,1.8rem);font-family:var(--mono);font-size:.68rem;color:#8B84C4;display:flex;gap:1.2rem;flex-wrap:wrap;align-items:center}
+.pie kbd{background:var(--noche-alta);border:1px solid var(--noche-borde);border-radius:4px;padding:1px 6px;color:var(--hueso)}
+
+.hero{text-align:center;margin-bottom:clamp(1rem,3vh,2rem)}
+.hero h1{font-family:var(--display);font-size:clamp(2.6rem,8vw,5.5rem);line-height:.92}
+.hero h1 em{font-style:normal;color:var(--oro)}
+.hero p{color:#B7AEE8;margin-top:.5rem;font-size:clamp(.9rem,1.6vw,1.05rem)}
+
+.menu{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));max-width:1100px;margin:0 auto}
+.tarjeta{padding:1.3rem;border-radius:14px;background:var(--noche-alta);border:2px solid var(--noche-borde);transition:transform .18s,border-color .18s;display:block;width:100%}
+.tarjeta:hover,.tarjeta:focus-visible{transform:translateY(-4px);border-color:var(--ac)}
+.tarjeta .et{font-family:var(--mono);font-size:.63rem;letter-spacing:.2em;color:var(--ac)}
+.tarjeta h3{font-family:var(--display);font-size:1.45rem;margin:.35rem 0 .4rem;line-height:1.05}
+.tarjeta p{font-size:.87rem;color:#B7AEE8;line-height:1.45}
+
+.btn{border-radius:10px;padding:.6rem 1.15rem;font-weight:700;font-size:.92rem;background:var(--noche-alta);border:2px solid var(--noche-borde);display:inline-block}
+.btn:hover{border-color:var(--oro)}
+.btn-oro{background:var(--oro);color:#241B00;border-color:var(--oro)}
+.btn-fant{background:none}
+.fila{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.centro{justify-content:center}
+.arriba{display:flex;align-items:center;gap:.8rem;margin-bottom:1.2rem;flex-wrap:wrap}
+.arriba h2{font-family:var(--display);font-size:clamp(1.05rem,2.2vw,1.5rem)}
+.arriba .sep{margin-left:auto}
+
+.eqs{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));max-width:900px;margin:0 auto 1.2rem}
+.eq-card{border:2px solid var(--eq);border-radius:12px;padding:1rem;background:rgba(255,255,255,.05)}
+.eq-card input{width:100%;background:none;border:0;border-bottom:2px dashed var(--eq);color:var(--hueso);font-family:var(--cuerpo);font-weight:700;font-size:1.05rem;padding:.3rem 0}
+.eq-card input:focus{outline:none;border-bottom-style:solid}
+.eq-card .pts{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--eq);margin-top:.4rem}
+.eq-card .mas{display:flex;gap:.35rem;margin-top:.5rem}
+.eq-card .mas button{flex:1;border:1px solid var(--noche-borde);border-radius:6px;padding:.28rem;font-family:var(--mono);font-size:.72rem;text-align:center}
+.eq-card .mas button:hover{background:var(--eq);color:var(--noche)}
+
+.pregunta{background:var(--noche-alta);border:2px solid var(--noche-borde);border-radius:16px;padding:clamp(1rem,3vw,2rem);text-align:center}
+.pregunta .q{font-size:clamp(1.25rem,3.2vw,2.4rem);line-height:1.2;font-weight:700}
+.opciones{display:grid;gap:.7rem;grid-template-columns:1fr 1fr;margin-top:1.2rem}
+.op{display:flex;align-items:center;gap:.8rem;padding:.85rem 1rem;border-radius:12px;background:#1B1642;border:2px solid var(--noche-borde);font-size:clamp(1rem,1.9vw,1.3rem);font-weight:500;transition:background .15s,border-color .15s,opacity .15s;width:100%}
+.op .letra{font-family:var(--display);color:var(--oro);font-size:1.05em;width:1.7em;height:1.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid var(--noche-borde);border-radius:8px}
+.op:hover{border-color:var(--oro)}
+.op.fuera{opacity:.2;pointer-events:none}
+.op.bien{background:var(--turquesa);color:#062B25;border-color:var(--turquesa)}
+.op.bien .letra{color:#062B25;border-color:#062B25}
+.op.mal{background:var(--cochinilla);color:#2B0410;border-color:var(--cochinilla)}
+.op.mal .letra{color:#2B0410;border-color:#2B0410}
+
+.mill{display:grid;grid-template-columns:1fr 190px;gap:1.2rem;align-items:start}
+.escalera{display:flex;flex-direction:column-reverse;gap:3px}
+.paso{display:flex;gap:.5rem;align-items:center;padding:.28rem .55rem;border-radius:6px;font-family:var(--mono);font-size:.76rem;color:#8B84C4;white-space:nowrap}
+.paso .lv{opacity:.55}
+.paso.seguro{color:var(--turquesa)}
+.paso.hecho{color:var(--hueso)}
+.paso.aqui{background:var(--oro);color:#241B00;font-weight:700}
+.comodines{display:flex;gap:.5rem;margin-top:1rem;justify-content:center;flex-wrap:wrap}
+.comodin{border:2px solid var(--lila);border-radius:99px;padding:.4rem 1rem;font-family:var(--mono);font-size:.75rem;color:var(--lila)}
+.comodin:hover{background:var(--lila);color:var(--noche)}
+.comodin.usado{opacity:.25;pointer-events:none;text-decoration:line-through}
+.aviso{margin-top:1rem;text-align:center;font-family:var(--display);font-size:clamp(1.1rem,2.6vw,1.8rem);color:var(--oro);min-height:1.2em}
+.aviso .btn{font-family:var(--cuerpo);font-size:.9rem;margin:.25rem}
+.reloj{font-family:var(--mono);font-size:1.35rem;color:var(--turquesa);font-weight:700}
+.reloj.urge{color:var(--cochinilla)}
+
+.ruleta-wrap{display:grid;grid-template-columns:minmax(200px,300px) 1fr;gap:1.5rem;align-items:center}
+.disco-caja{position:relative;width:100%;max-width:300px;margin:0 auto;padding-top:100%;height:0}
+.disco-in{position:absolute;inset:0}
+.aguja{position:absolute;top:-4px;left:50%;margin-left:-12px;width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:22px solid var(--oro);z-index:3}
+.disco{width:100%;height:100%;border-radius:50%;position:relative;border:6px solid var(--oro);background:#221B4F;transition:transform 3.4s cubic-bezier(.16,.84,.3,1)}
+.disco .seg{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;padding-top:7%;font-family:var(--display);font-size:clamp(.55rem,1.5vw,.8rem);color:var(--hueso)}
+.premio{font-family:var(--display);font-size:clamp(1.4rem,4vw,2.4rem);text-align:center;color:var(--oro);min-height:1.15em;margin:.5rem 0 .8rem}
+.frase{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem;justify-content:center;margin-bottom:1rem}
+.palabra{display:flex;gap:.3rem}
+.casilla{width:clamp(1.4rem,4vw,2.5rem);height:clamp(1.9rem,5.2vw,3.2rem);display:flex;align-items:center;justify-content:center;border-radius:6px;background:#1B1642;border-bottom:3px solid var(--noche-borde);font-family:var(--display);font-size:clamp(.95rem,3vw,1.9rem);color:transparent}
+.casilla.abierta{background:var(--hueso);color:var(--noche);border-bottom-color:var(--oro)}
+.pista{text-align:center;font-family:var(--mono);font-size:.76rem;color:var(--lila);letter-spacing:.14em;margin-bottom:.8rem}
+.teclas{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:640px;margin:0 auto}
+.tecla{width:2.1rem;height:2.1rem;border-radius:6px;background:var(--noche-alta);border:1px solid var(--noche-borde);font-family:var(--mono);font-weight:700;font-size:.88rem;text-align:center}
+.tecla:hover{background:var(--oro);color:var(--noche)}
+.tecla.gastada{opacity:.22;pointer-events:none}
+
+.picker{display:none;background:var(--noche-alta);border:2px solid var(--noche-borde);border-radius:12px;padding:1rem;margin-bottom:1rem}
+.picker-tope{display:flex;align-items:center;gap:.8rem;justify-content:center;margin-bottom:.8rem;flex-wrap:wrap}
+.cuenta{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;color:var(--cochinilla)}
+.cuenta.full{color:var(--turquesa)}
+.picker-pie{text-align:center;font-size:.78rem;color:#8B84C4;margin-top:.75rem;line-height:1.45;min-height:1.2em}
+.cchips{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center}
+.cchip{display:flex;align-items:center;gap:.4rem;border:2px solid var(--noche-borde);border-radius:99px;padding:.4rem .9rem;font-family:var(--mono);font-size:.72rem;color:#B7AEE8}
+.cchip:hover{border-color:var(--oro)}
+.cchip.on{background:var(--lila);border-color:var(--lila);color:var(--noche);font-weight:700}
+.cchip .num{background:var(--noche);color:var(--oro);border-radius:50%;width:1.35rem;height:1.35rem;display:flex;align-items:center;justify-content:center;font-size:.68rem;flex-shrink:0}
+.faltan{grid-column:1/-1;text-align:center;padding:2.5rem 1rem;color:var(--oro);font-family:var(--display);font-size:clamp(1rem,2.6vw,1.5rem);line-height:1.3;border:2px dashed var(--noche-borde);border-radius:12px}
+.leyenda{text-align:center;color:#8B84C4;font-size:.78rem;margin-top:1rem;line-height:1.5}
+.grilla{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem}
+.cat{font-family:var(--display);font-size:clamp(.55rem,1.3vw,.92rem);text-align:center;padding:.7rem .25rem;background:var(--lila);color:var(--noche);border-radius:8px;line-height:1.1;display:flex;align-items:center;justify-content:center}
+.casilla-pts{
+  padding:clamp(.55rem,1.8vw,1rem) .2rem;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;background:rgba(255,255,255,.03);border:2px solid var(--v,var(--noche-borde));
+  font-family:var(--mono);font-weight:700;font-size:clamp(.8rem,2vw,1.4rem);color:var(--v,var(--oro));width:100%;
+}
+.casilla-pts:hover{background:var(--v,var(--oro));color:#141033}
+.casilla-pts.usada{opacity:.16;pointer-events:none;color:var(--hueso);border-color:var(--noche-borde)}
+
+.velo{position:fixed;top:0;left:0;right:0;bottom:0;background:#0A081C;z-index:50;display:none;align-items:flex-start;justify-content:center;padding:clamp(.8rem,3vw,2.5rem);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.velo.viva{display:flex}
+.velo .caja{max-width:900px;width:100%;text-align:center;margin:auto 0}
+.respuesta{font-family:var(--display);font-size:clamp(1.3rem,3.6vw,2.6rem);color:var(--turquesa);margin:1.2rem 0 .4rem;min-height:1.2em}
+.respuesta.oculta{color:transparent;background:#221B4F;border-radius:10px}
+.cita{
+  font-family:var(--mono);font-size:clamp(.8rem,1.8vw,1.1rem);letter-spacing:.08em;
+  color:var(--oro);margin-bottom:.8rem;min-height:1.2em;
+}
+.cita.oculta{color:transparent}
+.cita::before{content:"📖 "}
+.cita.oculta::before{content:""}
+.coms{display:flex;gap:.22rem;margin-top:.3rem}
+.ficha{font-size:clamp(.7rem,1.6vw,.95rem);line-height:1}
+.ficha.gastada{opacity:.2;filter:grayscale(1)}
+.coms-fila{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
+.com-eq{display:flex;align-items:center;gap:.35rem;border:2px solid var(--eq);border-radius:99px;padding:.25rem .5rem .25rem .8rem}
+.com-nom{font-size:.78rem;font-weight:700;color:var(--eq);max-width:11ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.com-btn{position:relative;width:2.1rem;height:2.1rem;border-radius:50%;border:1px solid var(--noche-borde);font-size:.95rem;display:flex;align-items:center;justify-content:center}
+.com-btn .cuantos{
+  position:absolute;top:-4px;right:-4px;background:var(--eq);color:#141033;
+  border-radius:50%;width:1rem;height:1rem;font-family:var(--mono);font-style:normal;
+  font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;
+}
+.aviso-com b{color:var(--hueso);background:rgba(139,123,240,.25);border-radius:6px;padding:0 .4rem}
+.com-btn:hover{background:var(--eq)}
+.com-btn.gastada{opacity:.18;filter:grayscale(1);pointer-events:none}
+.aviso-com{
+  font-family:var(--display);font-size:clamp(1rem,2.8vw,1.7rem);text-align:center;
+  margin-top:1rem;min-height:1.2em;line-height:1.2;
+}
+.aviso-com.pub{color:var(--turquesa)}
+.aviso-com.pista{color:var(--oro)}
+.aviso-com.biblia{color:var(--lila)}
+.grupo{margin-top:1.1rem}
+.et-grupo{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.16em;color:var(--lila);margin-bottom:.45rem}
+.dar{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
+.dar button{border:2px solid var(--eq);border-radius:99px;padding:.5rem 1.1rem;font-weight:700;font-size:.9rem}
+.dar button:hover{background:var(--eq);color:var(--noche)}
+.dar.mitad button{border-style:dashed;opacity:.85;font-size:.82rem;padding:.4rem .95rem}
+.dar.mitad button:hover{opacity:1}
+.btn-nadie{background:none;border-color:var(--cochinilla);color:var(--cochinilla)}
+.btn-nadie:hover{background:var(--cochinilla);color:#fff;border-color:var(--cochinilla)}
+
+@media(max-width:860px){
+  .mill{grid-template-columns:1fr}
+  .escalera{order:-1;flex-direction:row;overflow-x:auto;padding-bottom:.35rem;margin-bottom:.6rem}
+  .ruleta-wrap{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+  .opciones{grid-template-columns:1fr}
+  .velo .pregunta{padding:.9rem}
+  .velo .pregunta .q{font-size:1.15rem}
+  .reloj-duelo{font-size:1.6rem;margin-bottom:.5rem}
+  .respuesta{font-size:1.2rem;margin:.8rem 0 .3rem}
+  .grupo{margin-top:.8rem}
+  .marc-velo{margin-bottom:.6rem}
+  .dar button{padding:.45rem .9rem;font-size:.85rem}
+}
+@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div id="error"></div>
+
+  <div class="barra">
+    <div class="marca">
+      <svg class="escudo" viewBox="0 0 40 40" aria-hidden="true">
+        <path d="M20 3 37 34H3z" fill="none" stroke="#F2B705" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M20 14l8 15h-16z" fill="#E8385F"/>
+      </svg>
+      <div><b>FUEGO CRUZADO</b><span>SOCIEDAD DE JÓVENES</span></div>
+    </div>
+    <button class="reset" id="btn-reset" data-a="reset">↻ REINICIAR TODO</button>
+    <button class="son" id="btn-son" data-a="mudo" aria-label="Activar o silenciar los sonidos">🔊</button>
+  </div>
+
+  <div class="faja" id="faja"></div>
+  <div class="marcador" id="marcador"></div>
+
+  <main>
+    <section class="pantalla viva" id="p-home">
+      <div class="hero">
+        <h1>FUEGO<br><em>CRUZADO</em></h1>
+        <p>Tres juegos para pantalla. Los voluntarios pasan al frente, tú manejas el teclado.</p>
+      </div>
+      <div class="menu">
+        <button class="tarjeta" style="--ac:var(--oro)" data-a="irMill">
+          <span class="et">JUEGO 01</span>
+          <h3>Millonario bíblico</h3>
+          <p>Un voluntario sube 12 niveles con 4 opciones por pregunta. Tres comodines y dos niveles seguros.</p>
+        </button>
+        <button class="tarjeta" style="--ac:var(--turquesa)" data-a="irRuleta">
+          <span class="et">JUEGO 02</span>
+          <h3>La ruleta de la palabra</h3>
+          <p>Gira, pide una letra y descubre la frase escondida. El turno pasa al siguiente equipo cuando fallan.</p>
+        </button>
+        <button class="tarjeta" style="--ac:var(--cochinilla)" data-a="irDuelo">
+          <span class="et">JUEGO 03</span>
+          <h3>Duelo de equipos</h3>
+          <p>Tablero de 5 categorías por 4 valores. El primero que levante la mano responde.</p>
+        </button>
+        <button class="tarjeta" style="--ac:var(--lila)" data-a="irSetup">
+          <span class="et">ANTES DE EMPEZAR</span>
+          <h3>Armar los equipos</h3>
+          <p>Pon los nombres, elige cuántos equipos juegan y ajusta puntos a mano si hace falta.</p>
+        </button>
+      </div>
+    </section>
+
+    <section class="pantalla" id="p-guia">
+      <div class="arriba">
+        <button class="btn btn-fant" data-a="irDuelo">← Volver al tablero</button>
+        <h2>Cómo se dirige el duelo</h2>
+      </div>
+
+      <div class="tuto">
+        <div class="aviso-clave">
+          <b>La regla de oro</b>
+          No toques <em>Mostrar respuesta</em> hasta que ya nadie pueda responder. Ese botón cierra la jugada: una vez revelada, el rival ya no puede robarla. Tú no lo necesitas para saber la respuesta — la tienes en el celular, en la guía del director.
+        </div>
+
+        <h3 class="tuto-t">El turno, paso a paso</h3>
+        <ol class="pasos">
+          <li><b>Toca una casilla.</b> El equipo en turno elige categoría y valor. Se abre la pregunta y arranca el reloj.</li>
+          <li><b>Lee la pregunta en voz alta.</b> Tienen 20 segundos (o 30, según el botón ⏱).</li>
+          <li><b>Si aciertan:</b> tocas el botón de puntaje completo con su nombre. Ahí sí revelas para que todos lo vean.</li>
+          <li><b>Si fallan o se acaba el tiempo:</b> no reveles nada. Anuncia <em>"pasa al rival, diez segundos"</em>.</li>
+          <li><b>El rival responde una sola vez.</b> Si acierta, le das el botón de la mitad. Si falla, tocas <em>Nadie acertó</em> y ahí recién revelas.</li>
+        </ol>
+
+        <h3 class="tuto-t">Los puntos</h3>
+        <table class="tuto-tabla">
+          <tr><td><b>Acertó de una</b></td><td>Puntaje completo</td></tr>
+          <tr><td><b>Se la robó el rival</b></td><td>La mitad, porque ya escuchó la pregunta</td></tr>
+          <tr><td><b>Usó comodín y acertó</b></td><td>Puntaje completo. El comodín ya les costó una ficha</td></tr>
+          <tr><td><b>Nadie respondió</b></td><td>La casilla se cierra sin puntos</td></tr>
+        </table>
+
+        <h3 class="tuto-t">Los comodines</h3>
+        <p class="tuto-p">Cada equipo tiene tres para <b>toda la noche</b>, uno de cada tipo. Se ven bajo su puntaje y se apagan al gastarse.</p>
+        <ul class="coms-lista">
+          <li><span>👥</span><div><b>Ayuda del público</b> — pausa el reloj y la congregación opina. Para cuando no tienen ni idea.</div></li>
+          <li><span>💡</span><div><b>Pista</b> — pausa el reloj y tú lees la pista desde el celular. Para cuando lo tienen en la punta de la lengua.</div></li>
+          <li><span>📖</span><div><b>Consultar la Biblia</b> — la pantalla muestra el libro y cuatro capítulos, y tienen un minuto para hallar el texto. Para cuando saben más o menos dónde está.</div></li>
+        </ul>
+
+        <h3 class="tuto-t">Cuando se acaba el tablero</h3>
+        <p class="tuto-p">Al cerrarse las 25 casillas sale el podio solo. Si hay empate no corona a nadie: ahí tocas <b>Pregunta de desempate</b> y entra la muerte súbita — 15 segundos, sin comodines, 500 puntos y se acabó.</p>
+
+        <h3 class="tuto-t">Lo que conviene anunciar antes de empezar</h3>
+        <div class="guion">
+          "Cada equipo elige una casilla por turno. Las verdes de 200 son sencillas, las rojas de 1000 están para los que estudian la lección.<br><br>
+          Cuando lea la pregunta tienen 20 segundos, y solo vale lo que diga el capitán. Si fallan, el otro equipo puede robarla, pero como ya escuchó la pregunta se lleva la mitad.<br><br>
+          Tienen tres comodines para toda la noche: público, pista y Biblia. Esos no les quitan puntos, pero se gastan.<br><br>
+          Gana el que tenga más puntos cuando el tablero quede vacío."
+        </div>
+
+        <h3 class="tuto-t">Atajos mientras diriges</h3>
+        <p class="tuto-p"><kbd>Espacio</kbd> revela la respuesta · <kbd>Esc</kbd> cierra o vuelve al menú · <kbd>1</kbd>-<kbd>4</kbd> responden en el millonario · <kbd>G</kbd> gira la ruleta. El botón 🔊 silencia los sonidos y <b>↻ Reiniciar todo</b> borra la partida, pero pide confirmación.</p>
+      </div>
+    </section>
+
+    <section class="pantalla" id="p-setup">
+      <div class="arriba">
+        <h2>Equipos</h2>
+        <div class="sep fila">
+          <button class="btn btn-fant" data-a="menosEq">Quitar equipo</button>
+          <button class="btn btn-fant" data-a="masEq">Añadir equipo</button>
+          <button class="btn btn-fant" data-a="devolverComs">Devolver comodines</button>
+          <button class="btn btn-fant" data-a="cero">Poner todo en cero</button>
+          <button class="btn btn-oro" data-a="irHome">Listo</button>
+        </div>
+      </div>
+      <div class="eqs" id="eqs"></div>
+      <p style="text-align:center;color:#8B84C4;font-size:.85rem">Los puntos se guardan entre los tres juegos, así el marcador sirve para toda la noche.</p>
+    </section>
+
+    <section class="pantalla" id="p-mill">
+      <div class="arriba">
+        <button class="btn btn-fant" data-a="irHome">← Menú</button>
+        <h2>Millonario bíblico</h2>
+        <div class="sep fila">
+          <span class="reloj" id="reloj">30</span>
+          <button class="btn btn-fant" data-a="millNuevo">Nuevo voluntario</button>
+        </div>
+      </div>
+      <div class="mill">
+        <div>
+          <div class="pregunta">
+            <div class="q" id="mill-q">—</div>
+            <div class="opciones" id="mill-ops"></div>
+          </div>
+          <div class="comodines">
+            <button class="comodin" id="c-5050" data-a="c5050">50 : 50</button>
+            <button class="comodin" id="c-pub" data-a="cpub">VOTO DEL PÚBLICO</button>
+            <button class="comodin" id="c-cambio" data-a="ccambio">CAMBIAR PREGUNTA</button>
+          </div>
+          <div class="aviso" id="mill-aviso"></div>
+        </div>
+        <div class="escalera" id="escalera"></div>
+      </div>
+    </section>
+
+    <section class="pantalla" id="p-ruleta">
+      <div class="arriba">
+        <button class="btn btn-fant" data-a="irHome">← Menú</button>
+        <h2>La ruleta de la palabra</h2>
+        <div class="sep fila">
+          <button class="btn btn-fant" data-a="pasar">Pasar turno</button>
+          <button class="btn btn-fant" data-a="resolver">Resolver frase (+500)</button>
+          <button class="btn btn-oro" data-a="nuevaFrase">Frase nueva</button>
+        </div>
+      </div>
+      <div class="ruleta-wrap">
+        <div>
+          <div class="disco-caja"><div class="disco-in">
+            <div class="aguja"></div>
+            <div class="disco" id="disco"></div>
+          </div></div>
+          <div class="premio" id="premio">GIRA</div>
+          <div class="fila centro"><button class="btn btn-oro" data-a="girar">Girar la ruleta</button></div>
+        </div>
+        <div>
+          <div class="pista" id="pista">—</div>
+          <div class="frase" id="frase"></div>
+          <div class="teclas" id="teclas"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pantalla" id="p-duelo">
+      <div class="arriba">
+        <button class="btn btn-fant" data-a="irHome">← Menú</button>
+        <h2>Duelo de equipos</h2>
+        <div class="sep fila">
+          <button class="btn btn-fant" id="btn-dur" data-a="dur">⏱ 20 s</button>
+          <button class="btn btn-fant" data-a="tie">Desempate</button>
+          <button class="btn btn-fant" data-a="verGanador">Ver ganador</button>
+          <button class="btn btn-fant" data-a="togPicker">Elegir categorías</button>
+          <button class="btn btn-fant" data-a="sorteo">Sortear 5 al azar</button>
+          <button class="btn btn-fant" data-a="duelNuevo">Limpiar tablero</button>
+          <button class="btn btn-fant" data-a="irGuia">Cómo se dirige</button>
+        </div>
+      </div>
+      <div class="picker" id="picker"></div>
+      <div class="grilla" id="grilla"></div>
+      <p class="leyenda">Cinco niveles por categoría: <b style="color:#2ED3B7">200</b> · <b style="color:#A8D83A">300</b> · <b style="color:#F2B705">500</b> · <b style="color:#F2760B">800</b> · <b style="color:#E8385F">1000</b>. Las rojas son para los que estudian la lección. Al abrir la casilla verás los rombos de dificultad, y al revelar sale la respuesta con su cita bíblica.</p>
+    </section>
+  </main>
+
+  <div class="pie">
+    <span><kbd>Esc</kbd> volver al menú</span>
+    <span><kbd>1</kbd>–<kbd>4</kbd> responder</span>
+    <span><kbd>Espacio</kbd> mostrar respuesta</span>
+    <span><kbd>G</kbd> girar</span>
+    <span id="pie-turno"></span>
+  </div>
+</div>
+
+<div class="velo" id="velo">
+  <div class="caja">
+    <div class="marc-velo" id="velo-marc"></div>
+    <div class="reloj-duelo" id="velo-reloj">20</div>
+    <div class="pista" id="velo-cat">—</div>
+    <div class="pregunta"><div class="q" id="velo-q">—</div></div>
+    <div class="respuesta oculta" id="velo-r">—</div>
+    <div class="cita oculta" id="velo-cita">—</div>
+    <div class="fila centro">
+      <button class="btn btn-oro" data-a="mostrarR">Mostrar respuesta</button>
+      <button class="btn btn-nadie" data-a="cerrarVelo">Nadie acertó · sin puntos</button>
+    </div>
+    <div class="aviso-com" id="velo-aviso"></div>
+    <div class="grupo">
+      <span class="et-grupo">COMODINES · UNO DE CADA UNO POR EQUIPO · NO QUITAN PUNTOS</span>
+      <div class="coms-fila" id="velo-coms"></div>
+    </div>
+    <div id="velo-dar"></div>
+  </div>
+</div>
+
+<div class="velo tie" id="tie">
+  <div class="caja">
+    <div class="tie-et">MUERTE SÚBITA · 500 PUNTOS</div>
+    <div class="reloj-duelo" id="tie-reloj">15</div>
+    <div class="pregunta"><div class="q" id="tie-q">—</div></div>
+    <div class="respuesta oculta" id="tie-r">—</div>
+    <div class="cita oculta" id="tie-cita">—</div>
+    <div class="fila centro">
+      <button class="btn btn-oro" data-a="tieR">Mostrar respuesta</button>
+      <button class="btn btn-fant" data-a="tieOtra">Otra pregunta</button>
+      <button class="btn btn-nadie" data-a="tieCerrar">Cerrar</button>
+    </div>
+    <div class="grupo">
+      <span class="et-grupo">GANA EL DESEMPATE</span>
+      <div class="dar" id="tie-dar"></div>
+    </div>
+  </div>
+</div>
+
+<div class="final" id="final">
+  <div class="caja">
+    <h2 id="final-t">¡GANADOR!</h2>
+    <div class="sub" id="final-s">TABLERO COMPLETO</div>
+    <div class="podio" id="podio"></div>
+    <div class="fila centro">
+      <button class="btn btn-oro" data-a="tie">Pregunta de desempate</button>
+      <button class="btn btn-fant" data-a="cerrarFinal">Seguir aquí</button>
+      <button class="btn btn-fant" data-a="tableroNuevo">Tablero nuevo, mismos puntos</button>
+      <button class="btn btn-fant" data-a="partidaNueva">Empezar de cero</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+function avisarError(msg){
+  var e=document.getElementById('error');
+  if(e){e.style.display='block';e.textContent='Algo falló: '+msg;}
+}
+window.onerror=function(m,f,l){avisarError(m+' (línea '+l+')');return false;};
+
+var COLORES=['#E8385F','#2FC96B','#F2B705','#4C7DF0'];
+var NOMBRES=['Equipo Rojo','Equipo Verde','Equipo Amarillo','Equipo Azul'];
+var COMS=[['pub','\u{1F465}','AYUDA DEL P\u00daBLICO',1],['pista','\u{1F4A1}','PISTA',1],['biblia','\u{1F4D6}','CONSULTAR LA BIBLIA',1]];
+function comsNuevos(){return {pub:1,pista:1,biblia:1};}
+function nuevoEq(n){return {n:n,p:0,c:comsNuevos()};}
+var S={eqs:[nuevoEq(NOMBRES[0]),nuevoEq(NOMBRES[1])],turno:0,vista:'home'};
+function normalizar(){var i,e;for(i=0;i<S.eqs.length;i++){e=S.eqs[i];if(!e.c)e.c=comsNuevos();}}
+
+var FACIL=[
+ ['¿Cuál es el primer libro de la Biblia?',['Génesis','Éxodo','Salmos','Mateo'],0],
+ ['¿Quién construyó el arca?',['Abraham','Noé','Moisés','Jonás'],1],
+ ['¿En qué ciudad nació Jesús?',['Nazaret','Jerusalén','Belén','Capernaum'],2],
+ ['¿Cuántos discípulos escogió Jesús?',['7','10','12','40'],2],
+ ['¿Quién fue tragado por un gran pez?',['Jonás','Elías','Pedro','Job'],0],
+ ['¿Con qué venció David a Goliat?',['Una espada','Una honda y una piedra','Un arco','Una lanza'],1],
+ ['¿Quién bautizó a Jesús?',['Pedro','Juan el Bautista','Andrés','Santiago'],1],
+ ['¿Cuántas plagas cayeron sobre Egipto?',['7','10','12','3'],1]
+];
+var MEDIO=[
+ ['¿Quién fue lanzado al foso de los leones?',['Daniel','Sadrac','Jeremías','Esteban'],0],
+ ['¿En qué monte recibió Moisés los Diez Mandamientos?',['Carmelo','Nebo','Sinaí','Moriah'],2],
+ ['¿Quién negó a Jesús tres veces?',['Judas','Tomás','Pedro','Juan'],2],
+ ['¿Quién sucedió a Moisés como líder de Israel?',['Caleb','Josué','Aarón','Gedeón'],1],
+ ['¿Qué juez perdió su fuerza al cortarse el cabello?',['Sansón','Jefté','Barac','Otoniel'],0],
+ ['¿Qué rey pidió sabiduría a Dios?',['David','Saúl','Salomón','Ezequías'],2],
+ ['¿Cuántos libros tiene la Biblia protestante?',['60','66','72','39'],1],
+ ['¿Quién interpretó los sueños de Faraón?',['Daniel','José','Jacob','Esdras'],1]
+];
+var DIFICIL=[
+ ['¿En qué isla estaba Juan cuando recibió el Apocalipsis?',['Creta','Chipre','Patmos','Malta'],2],
+ ['¿Quién fue el primer mártir cristiano?',['Esteban','Santiago','Pablo','Bernabé'],0],
+ ['¿Cuál es el último libro del Antiguo Testamento?',['Malaquías','Zacarías','Daniel','Nehemías'],0],
+ ['¿Cómo se llamaba el suegro de Moisés?',['Labán','Jetro','Booz','Eliab'],1],
+ ['¿Cuántos años vivió Matusalén?',['930','969','777','895'],1],
+ ['¿Cuál es el capítulo más corto de la Biblia?',['Salmo 117','Salmo 23','Juan 1','Judas 1'],0],
+ ['¿Qué profeta fue llevado al cielo en un carro de fuego?',['Eliseo','Enoc','Elías','Isaías'],2],
+ ['¿Quién sucedió a Elías como profeta?',['Eliseo','Amós','Oseas','Miqueas'],0]
+];
+var ESCALA=[100,200,300,500,800,1200,1800,2500,3500,5000,7500,10000];
+var SEGUROS=[3,7];
+
+var FRASES=[
+ ['EL SENOR ES MI PASTOR','Salmo 23'],
+ ['LA ZARZA ARDIENTE','Moisés en Horeb'],
+ ['EL BUEN SAMARITANO','Parábola de Jesús'],
+ ['LOS DIEZ MANDAMIENTOS','Éxodo 20'],
+ ['EL HIJO PRODIGO','Parábola de Jesús'],
+ ['LA REINA ESTER','Heroína del Antiguo Testamento'],
+ ['DAVID Y GOLIAT','Valle de Ela'],
+ ['LA ULTIMA CENA','Aposento alto'],
+ ['EL VALLE DE LOS HUESOS SECOS','Visión de Ezequiel'],
+ ['LA MUJER SAMARITANA','Pozo de Jacob'],
+ ['EL SERMON DEL MONTE','Mateo 5 al 7'],
+ ['SOCIEDAD DE JOVENES ADVENTISTAS','Lo que somos esta noche']
+];
+var SEGMENTOS=[200,400,'PIERDE',300,600,250,'x2',350,450,'PIERDE',500,150];
+
+var BANCO=[
+ ['PERSONAJES',[
+  ['¿Quién sucedió a Elías como profeta?','Eliseo','2 Reyes 2:9-15'],
+  ['¿Cómo se llamaba el suegro de Moisés?','Jetro, también llamado Reuel','Éxodo 3:1; 2:18'],
+  ['¿Cómo se llamaban la abuela y la madre de Timoteo?','Loida y Eunice','2 Timoteo 1:5'],
+  ['¿Quién fue el padre de Matusalén?','Enoc','Génesis 5:21-24; Hebreos 11:5'],
+  ['¿Cómo se llamaban los dos hijos de Elí que murieron el mismo día?','Ofni y Finees','1 Samuel 4:11, 17']]],
+ ['LUGARES',[
+  ['¿En qué monte desafió Elías a los profetas de Baal?','El monte Carmelo','1 Reyes 18:19-39'],
+  ['¿En qué isla estaba Juan cuando recibió el Apocalipsis?','Patmos','Apocalipsis 1:9'],
+  ['¿En qué ciudad empezaron a llamar "cristianos" a los discípulos?','Antioquía','Hechos 11:26'],
+  ['¿En qué ciudad encontró Pablo un altar dedicado al "Dios no conocido"?','Atenas','Hechos 17:22-23'],
+  ['¿Dónde fue sepultado Moisés?','En un valle de Moab, frente a Bet-peor','Deuteronomio 34:6']]],
+ ['NÚMEROS',[
+  ['¿Cuántos años anduvo Israel por el desierto?','40 años','Números 14:33-34'],
+  ['¿Cuántos días ayunó Jesús en el desierto?','40 días y 40 noches','Mateo 4:2'],
+  ['¿De cuántos días es la profecía más larga del libro de Daniel?','2300 tardes y mañanas','Daniel 8:14'],
+  ['¿Cuántos años de cautiverio en Babilonia anunció Jeremías?','70 años','Jeremías 25:11-12; 29:10'],
+  ['¿Cuántos años reinó David en Hebrón y cuántos en Jerusalén?','40 años: 7 en Hebrón y 33 en Jerusalén','2 Samuel 5:4-5']]],
+ ['MILAGROS',[
+  ['¿A quién resucitó Jesús después de cuatro días en el sepulcro?','A Lázaro','Juan 11:39-44'],
+  ['¿Cuál fue el primer milagro de Jesús y dónde ocurrió?','Convirtió agua en vino, en las bodas de Caná','Juan 2:1-11'],
+  ['¿Qué profeta hizo que un hacha de hierro flotara en el agua?','Eliseo','2 Reyes 6:1-7'],
+  ['¿A qué rey enfermo le dio Dios la señal de retroceder diez grados la sombra?','Ezequías','2 Reyes 20:9-11; Isaías 38:8'],
+  ['¿A quién resucitó Pablo después de que se cayera de una ventana en Troas?','A Eutico','Hechos 20:9-12']]],
+ ['VERSÍCULOS',[
+  ['Completa: "Jehová es mi pastor,..."','...nada me faltará','Salmo 23:1'],
+  ['Completa: "Es, pues, la fe la certeza de lo que se espera,..."','...la convicción de lo que no se ve','Hebreos 11:1'],
+  ['¿En qué evangelio y capítulo dijo Jesús "Escudriñad las Escrituras"?','En Juan, capítulo 5','Juan 5:39'],
+  ['Completa: "Toda la Escritura es inspirada por Dios, y útil para..."','...enseñar, redargüir, corregir e instruir en justicia','2 Timoteo 3:16'],
+  ['Según Miqueas 6:8, Dios pide tres cosas: hacer justicia, amar misericordia, ¿y qué más?','...humillarte ante tu Dios','Miqueas 6:8']]],
+ ['EL SÁBADO',[
+  ['¿En qué día de la creación descansó Dios?','El séptimo','Génesis 2:2-3'],
+  ['¿Quién dijo "el Hijo del Hombre es Señor aun del día de reposo"?','Jesús','Marcos 2:27-28'],
+  ['Según Isaías 66, ¿cada cuánto irán todos a adorar delante de Dios en la nueva tierra?','De sábado en sábado y de mes en mes','Isaías 66:22-23'],
+  ['En Ezequiel 20:12, ¿qué dice Dios que es el sábado para su pueblo?','Como señal entre él y ellos, para que supieran que Jehová los santifica','Ezequiel 20:12, 20'],
+  ['¿Qué hicieron las mujeres el sábado, después de que Jesús fue sepultado?','Descansaron, conforme al mandamiento','Lucas 23:56']]],
+ ['DANIEL',[
+  ['¿Cuáles eran los nombres babilónicos de los tres amigos de Daniel?','Sadrac, Mesac y Abed-nego','Daniel 1:7'],
+  ['En el sueño de Nabucodonosor, ¿de qué eran los pies de la estatua?','Hierro mezclado con barro cocido','Daniel 2:33, 41-43'],
+  ['Según Daniel 8:14, ¿qué ocurriría al final de los 2300 días?','"Será purificado el santuario"','Daniel 8:14'],
+  ['¿Qué dos reinos representan el carnero y el macho cabrío de Daniel 8?','Medo-Persia y Grecia','Daniel 8:20-21'],
+  ['¿Qué escribió la mano en la pared del palacio de Belsasar?','MENE, MENE, TEKEL, UPARSIN','Daniel 5:25-28']]],
+ ['APOCALIPSIS',[
+  ['¿Con qué promesa de Jesús casi termina el Apocalipsis?','"Ciertamente vengo en breve"','Apocalipsis 22:20'],
+  ['¿Cuántos ángeles dan mensajes en Apocalipsis 14?','Tres','Apocalipsis 14:6-12'],
+  ['Según Apocalipsis 14:12, ¿qué dos cosas distinguen a los santos?','Guardan los mandamientos de Dios y la fe de Jesús','Apocalipsis 14:12'],
+  ['¿Cuál es el mensaje del segundo ángel de Apocalipsis 14?','"Ha caído, ha caído Babilonia, la gran ciudad"','Apocalipsis 14:8'],
+  ['En la visión del trono de Apocalipsis 4, ¿cuántos ancianos y cuántos seres vivientes hay?','24 ancianos y 4 seres vivientes','Apocalipsis 4:4-6']]],
+ ['EL SANTUARIO',[
+  ['¿Con qué frecuencia entraba el sumo sacerdote al Lugar Santísimo?','Una vez al año, en el Día de la Expiación','Levítico 16:34; Hebreos 9:7'],
+  ['¿Qué se guardaba dentro del arca del pacto?','Las tablas de la ley; Hebreos añade la urna de maná y la vara de Aarón','1 Reyes 8:9; Hebreos 9:4'],
+  ['Además del candelabro y la mesa de los panes, ¿qué había en el Lugar Santo?','El altar del incienso','Éxodo 30:1-6; Apocalipsis 8:3-4'],
+  ['¿Cuántas lámparas y cuántos brazos tenía el candelero del santuario?','Siete lámparas sobre seis brazos y el tronco central','Éxodo 25:31-37'],
+  ['¿Con qué dos objetos del pectoral se consultaba la voluntad de Dios?','El Urim y el Tumim','Éxodo 28:30']]],
+ ['SALUD Y VIDA',[
+  ['Según Pablo, ¿de quién es templo nuestro cuerpo?','Del Espíritu Santo','1 Corintios 6:19-20'],
+  ['¿En qué libros de Moisés está la lista de animales limpios e inmundos?','En Levítico 11 y Deuteronomio 14','Levítico 11:1-47'],
+  ['Según Génesis 1:29, ¿qué le dio Dios al ser humano para comer al principio?','Toda planta que da semilla y todo árbol que da fruto','Génesis 1:29'],
+  ['¿De qué cuatro cosas pidió el concilio de Jerusalén que se apartaran los gentiles?','Lo sacrificado a ídolos, la sangre, lo ahogado y la fornicación','Hechos 15:28-29'],
+  ['Según Levítico 11, ¿qué dos cosas debía tener un animal del agua para poder comerse?','Aletas y escamas','Levítico 11:9-12']]],
+ ['VIDA DE JESÚS',[
+  ['¿Qué edad tenía Jesús cuando sus padres lo hallaron en el templo?','12 años','Lucas 2:42'],
+  ['¿En qué huerto oró Jesús antes de ser entregado?','Getsemaní','Mateo 26:36; Lucas 22:44'],
+  ['Según el evangelio de Juan, ¿qué dijo Jesús justo antes de morir?','"Consumado es"','Juan 19:30'],
+  ['¿Cuántos días estuvo Jesús con los discípulos después de resucitar?','40 días','Hechos 1:3'],
+  ['¿En qué tres idiomas mandó escribir Pilato el letrero de la cruz?','Hebreo, griego y latín','Juan 19:19-20']]],
+ ['MUJERES',[
+  ['¿Qué reina arriesgó su vida para salvar a su pueblo?','Ester','Ester 4:16'],
+  ['¿Qué mujer fue jueza y profetisa en Israel?','Débora','Jueces 4:4-9'],
+  ['¿Qué mujer que vendía púrpura fue la primera en creer en Filipos?','Lidia','Hechos 16:14-15'],
+  ['¿Qué profetisa anciana reconoció al niño Jesús en el templo?','Ana','Lucas 2:36-38'],
+  ['¿Cómo se llamaban las dos parteras hebreas que desobedecieron a Faraón?','Sifra y Fúa','Éxodo 1:15-17']]],
+ ['IGLESIA PRIMITIVA',[
+  ['¿A qué ciudad iba Saulo cuando se convirtió?','A Damasco','Hechos 9:3-9'],
+  ['¿Quién bautizó al eunuco etíope?','Felipe','Hechos 8:26-39'],
+  ['¿Qué matrimonio mintió al Espíritu Santo?','Ananías y Safira','Hechos 5:1-11'],
+  ['¿Qué centurión romano fue bautizado por Pedro en Cesarea?','Cornelio','Hechos 10:1-48'],
+  ['¿Qué matrimonio que hacía tiendas le explicó mejor el camino de Dios a Apolos?','Aquila y Priscila','Hechos 18:2-3, 26']]]
+];
+var VALORES=[200,300,500,800,1000];
+var TONOS=['#2ED3B7','#A8D83A','#F2B705','#F2760B','#E8385F'];
+
+/* muerte súbita: por encima de cualquier pregunta de 1000 */
+var DESEMPATE=[
+ ['¿Qué rey de Persia dio el decreto que marca el inicio de los 2300 días?','Artajerjes I, en el año 457 a.C.','Esdras 7:11-26'],
+ ['¿Cuántas semanas anuncia la profecía de Daniel 9 y a cuántos años equivalen?','70 semanas, es decir 490 años','Daniel 9:24'],
+ ['Según Apocalipsis 12:17, ¿qué dos cosas distinguen al remanente?','Guardan los mandamientos de Dios y tienen el testimonio de Jesucristo','Apocalipsis 12:17'],
+ ['¿Cómo se llamaban las cinco hijas de Zelofehad?','Maala, Noa, Hogla, Milca y Tirsa','Números 27:1'],
+ ['¿Qué medidas tenía el arca del pacto?','Dos codos y medio de largo, uno y medio de ancho y uno y medio de alto','Éxodo 25:10'],
+ ['¿Qué edad tenía Darío de Media cuando tomó el reino?','62 años','Daniel 5:31'],
+ ['¿Qué altura tiene el muro de la nueva Jerusalén?','144 codos','Apocalipsis 21:17'],
+ ['¿Cuántos días estuvo Daniel orando antes de que llegara el ángel?','21 días, o sea tres semanas','Daniel 10:2-13'],
+ ['¿Quién escribía al dictado de Jeremías el rollo que el rey Joacim quemó?','Baruc hijo de Nerías; el rey Joacim lo quemó','Jeremías 36:4, 23'],
+ ['¿Cómo se llamaba el hijo de Saúl que reinó dos años después de la muerte de su padre?','Is-boset','2 Samuel 2:10'],
+ ['¿Quiénes sostuvieron las manos de Moisés en la batalla contra Amalec?','Aarón y Hur','Éxodo 17:12'],
+ ['¿Quiénes fueron el padre y la madre de Booz?','Salmón y Rahab','Mateo 1:5'],
+ ['¿Qué le ocurrió al ejército sirio que rodeó a Eliseo en Dotán?','Fue herido de ceguera y llevado hasta Samaria','2 Reyes 6:18-20'],
+ ['¿Cuántos años tenía Josías cuando comenzó a reinar?','8 años','2 Reyes 22:1'],
+ ['¿Cuál es el único siervo de Abraham que aparece con nombre en la Biblia?','Eliezer de Damasco; el criado de Génesis 24 nunca es nombrado','Génesis 15:2'],
+ ['¿Qué hizo Nehemías con las puertas de Jerusalén antes del sábado?','Mandó cerrarlas al oscurecer y no abrirlas hasta pasado el sábado','Nehemías 13:19']
+];
+
+function $(id){return document.getElementById(id);}
+
+/* ── sonido (sin archivos, generado en el navegador) ── */
+var AUDIO={ctx:null,mudo:false};
+function ac(){
+  if(!AUDIO.ctx){
+    try{AUDIO.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AUDIO.ctx=null;}
+  }
+  if(AUDIO.ctx&&AUDIO.ctx.state==='suspended'){try{AUDIO.ctx.resume();}catch(e){}}
+  return AUDIO.ctx;
+}
+function tono(hz,retraso,dur,tipo,vol){
+  var c=ac();if(!c)return;
+  try{
+    var o=c.createOscillator(),g=c.createGain(),t=c.currentTime+retraso;
+    o.type=tipo||'sine';o.frequency.value=hz;
+    o.connect(g);g.connect(c.destination);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.16,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.start(t);o.stop(t+dur+0.03);
+  }catch(e){}
+}
+function sonar(q){
+  if(AUDIO.mudo)return;
+  if(q==='bien'){tono(523,0,.14);tono(659,.11,.14);tono(784,.22,.3);}
+  else if(q==='medio'){tono(523,0,.13);tono(659,.11,.22);}
+  else if(q==='mal'){tono(190,0,.22,'sawtooth',.13);tono(120,.16,.34,'sawtooth',.13);}
+  else if(q==='tic'){tono(880,0,.05,'square',.07);}
+  else if(q==='abre'){tono(440,0,.08,'triangle',.09);}
+  else if(q==='fin'){tono(523,0,.16);tono(659,.16,.16);tono(784,.32,.16);tono(1046,.48,.55);}
+}
+
+/* ── guardado de la partida ── */
+function guardar(){
+  try{
+    localStorage.setItem('retoja',JSON.stringify({
+      eqs:S.eqs,turno:S.turno,usadas:D.usadas,sel:D.sel,mudo:AUDIO.mudo,dur:DUR
+    }));
+  }catch(e){}
+}
+function cargar(){
+  try{
+    var d=JSON.parse(localStorage.getItem('retoja')||'null');
+    if(!d)return;
+    if(d.eqs&&d.eqs.length){S.eqs=d.eqs;S.turno=d.turno||0;}
+    if(d.usadas)D.usadas=d.usadas;
+    if(d.sel&&d.sel.length===5)D.sel=d.sel;
+    AUDIO.mudo=!!d.mudo;
+    if(d.dur===20||d.dur===30)DUR=d.dur;
+  }catch(e){}
+}
+function olvidar(){try{localStorage.removeItem('retoja');}catch(e){}}
+
+function mezclar(a){
+  var b=a.slice(),i,j,t;
+  for(i=b.length-1;i>0;i--){j=Math.floor(Math.random()*(i+1));t=b[i];b[i]=b[j];b[j]=t;}
+  return b;
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+var MAPA={home:'p-home',setup:'p-setup',guia:'p-guia',mill:'p-mill',ruleta:'p-ruleta',duelo:'p-duelo'};
+function ir(v){
+  var destino=$(MAPA[v]);
+  if(!destino){avisarError('no existe la pantalla "'+v+'"');return;}
+  var todas=document.querySelectorAll('.pantalla'),i;
+  for(i=0;i<todas.length;i++)todas[i].className='pantalla';
+  destino.className='pantalla viva';
+  S.vista=v;
+  if(v!=='mill')pararReloj();
+  if(v==='home'||v==='setup'||v==='guia')pintarFaja(0);
+}
+
+var PREV=[];
+function fichas(i){
+  var h='',k,u,quedan;
+  for(k=0;k<COMS.length;k++){
+    quedan=S.eqs[i].c[COMS[k][0]]||0;
+    for(u=0;u<COMS[k][3];u++)
+      h+='<span class="ficha'+(u<quedan?'':' gastada')+'" title="'+COMS[k][2]+'">'+COMS[k][1]+'</span>';
+  }
+  return '<span class="coms">'+h+'</span>';
+}
+function pintarMarcador(){
+  var h='',i,tope=0,lider=-1,empate=false;
+  for(i=0;i<S.eqs.length;i++)if(S.eqs[i].p>tope)tope=S.eqs[i].p;
+  if(tope>0){
+    for(i=0;i<S.eqs.length;i++)if(S.eqs[i].p===tope){if(lider>=0)empate=true;else lider=i;}
+  }
+  for(i=0;i<S.eqs.length;i++){
+    var subio=PREV[i]!==undefined&&S.eqs[i].p>PREV[i];
+    h+='<div class="mcard'+(i===S.turno?' turno':'')+(subio?' sube':'')+'" style="--eq:'+COLORES[i]+'">'+
+       (i===lider&&!empate?'<span class="lider">👑</span>':'')+
+       '<span class="nom">'+esc(S.eqs[i].n)+'</span>'+
+       '<span class="n">'+S.eqs[i].p+'</span>'+
+       fichas(i)+'</div>';
+  }
+  $('marcador').innerHTML=h;
+  PREV=[];
+  for(i=0;i<S.eqs.length;i++)PREV.push(S.eqs[i].p);
+}
+function pintarTablero(){
+  pintarMarcador();
+  $('pie-turno').textContent=S.eqs.length?'Turno: '+S.eqs[S.turno].n:'';
+  pintarEqs();
+}
+function pintarEqs(){
+  var h='',i;
+  for(i=0;i<S.eqs.length;i++)
+    h+='<div class="eq-card" style="--eq:'+COLORES[i]+'">'+
+       '<input value="'+esc(S.eqs[i].n)+'" data-nom="'+i+'" aria-label="Nombre del equipo '+(i+1)+'">'+
+       '<div class="pts">'+S.eqs[i].p+'</div><div class="mas">'+
+       '<button data-a="sum" data-i="'+i+'" data-p="-100">−100</button>'+
+       '<button data-a="sum" data-i="'+i+'" data-p="100">+100</button>'+
+       '<button data-a="turno" data-i="'+i+'">Su turno</button></div></div>';
+  $('eqs').innerHTML=h;
+}
+function sumar(i,n){S.eqs[i].p=Math.max(0,S.eqs[i].p+n);pintarTablero();guardar();}
+
+function pintarFaja(frac){
+  var f=$('faja'),n=24,i,k;
+  if(f.children.length!==n){
+    var h='';for(i=0;i<n;i++)h+='<i class="rombo"></i>';f.innerHTML=h;
+  }
+  k=Math.round((frac||0)*n);
+  for(i=0;i<n;i++)f.children[i].className='rombo'+(i<k?' on':'');
+}
+
+/* ── Millonario ── */
+var M={q:[],i:0,bloq:false,t:null,seg:30};
+function millNuevo(){
+  M.q=mezclar(FACIL).slice(0,4).concat(mezclar(MEDIO).slice(0,4),mezclar(DIFICIL).slice(0,4));
+  M.i=0;
+  ['c-5050','c-pub','c-cambio'].forEach(function(id){$(id).className='comodin';});
+  millPintar();
+}
+function millPintar(){
+  M.bloq=false;
+  $('mill-aviso').innerHTML='';
+  var p=M.q[M.i],h='',i;
+  $('mill-q').textContent=p[0];
+  for(i=0;i<4;i++)
+    h+='<button class="op" data-a="resp" data-i="'+i+'"><span class="letra">'+'ABCD'[i]+
+       '</span><span>'+esc(p[1][i])+'</span></button>';
+  $('mill-ops').innerHTML=h;
+  h='';
+  for(i=0;i<12;i++)
+    h+='<div class="paso'+(i===M.i?' aqui':i<M.i?' hecho':'')+(SEGUROS.indexOf(i)>=0?' seguro':'')+'">'+
+       '<span class="lv">'+(i+1<10?'0':'')+(i+1)+'</span><span>'+ESCALA[i]+' pts</span>'+
+       (SEGUROS.indexOf(i)>=0?'<span>◆</span>':'')+'</div>';
+  $('escalera').innerHTML=h;
+  pintarFaja(M.i/12);
+  arrancarReloj();
+}
+function responder(i){
+  if(M.bloq||!M.q.length)return;
+  M.bloq=true;pararReloj();
+  var ok=M.q[M.i][2],ops=document.querySelectorAll('#mill-ops .op'),k;
+  for(k=0;k<ops.length;k++){
+    if(k===ok)ops[k].className='op bien';
+    else if(k===i)ops[k].className='op mal';
+  }
+  if(i===ok){
+    sonar('bien');
+    $('mill-aviso').textContent='¡Correcto! '+ESCALA[M.i]+' puntos';
+    setTimeout(function(){
+      M.i++;
+      if(M.i>=12)terminarMill(ESCALA[11],true);else millPintar();
+    },2200);
+  }else{
+    sonar('mal');
+    var seg=-1,s;
+    for(s=0;s<SEGUROS.length;s++)if(SEGUROS[s]<M.i)seg=SEGUROS[s];
+    var gana=seg<0?0:ESCALA[seg];
+    $('mill-aviso').textContent='Falló. Se lleva '+gana+' puntos';
+    setTimeout(function(){terminarMill(gana,false);},2400);
+  }
+}
+function terminarMill(pts,gano){
+  pintarFaja(gano?1:M.i/12);
+  $('mill-q').textContent=gano?'¡Llegó hasta arriba!':'Fin del turno';
+  $('mill-ops').innerHTML='';
+  var h='Dar '+pts+' puntos a: ',i;
+  for(i=0;i<S.eqs.length;i++)
+    h+='<button class="btn" data-a="darMill" data-i="'+i+'" data-p="'+pts+'">'+esc(S.eqs[i].n)+'</button>';
+  h+='<button class="btn btn-fant" data-a="millNuevo">Nadie</button>';
+  $('mill-aviso').innerHTML=h;
+}
+function usar5050(){
+  if(M.bloq)return;
+  $('c-5050').className='comodin usado';
+  var ok=M.q[M.i][2],malas=[],i;
+  for(i=0;i<4;i++)if(i!==ok)malas.push(i);
+  malas=mezclar(malas).slice(0,2);
+  for(i=0;i<malas.length;i++)
+    document.querySelector('#mill-ops .op[data-i="'+malas[i]+'"]').className='op fuera';
+}
+function usarPublico(){
+  $('c-pub').className='comodin usado';pararReloj();
+  $('mill-aviso').textContent='¡Que el público vote levantando la mano!';
+}
+function usarCambio(){
+  if(M.bloq)return;
+  $('c-cambio').className='comodin usado';
+  var banco=M.i<4?FACIL:M.i<8?MEDIO:DIFICIL,actual=M.q[M.i][0];
+  var otras=banco.filter(function(x){return x[0]!==actual;});
+  M.q[M.i]=mezclar(otras)[0];
+  millPintar();
+}
+function arrancarReloj(){
+  pararReloj();M.seg=30;$('reloj').textContent='30';$('reloj').className='reloj';
+  M.t=setInterval(function(){
+    M.seg--;$('reloj').textContent=M.seg;
+    if(M.seg<=10)$('reloj').className='reloj urge';
+    if(M.seg<=0){pararReloj();$('mill-aviso').textContent='¡Se acabó el tiempo!';}
+  },1000);
+}
+function pararReloj(){if(M.t){clearInterval(M.t);M.t=null;}}
+
+/* ── Ruleta ── */
+var R={frase:'',pista:'',abiertas:{},valor:null,rot:0,girando:false,orden:[]};
+function construirDisco(){
+  var d=$('disco'),n=SEGMENTOS.length,paso=360/n,partes=[],h='',i,c;
+  for(i=0;i<n;i++){
+    c=SEGMENTOS[i]==='PIERDE'?'#E8385F':SEGMENTOS[i]==='x2'?'#2ED3B7':(i%2?'#2E2568':'#221B4F');
+    partes.push(c+' '+(i*paso)+'deg '+((i+1)*paso)+'deg');
+    h+='<div class="seg" style="transform:rotate('+(i*paso+paso/2)+'deg)">'+SEGMENTOS[i]+'</div>';
+  }
+  d.style.background='conic-gradient('+partes.join(',')+')';
+  d.innerHTML=h;
+}
+function nuevaFrase(){
+  if(!R.orden.length){
+    var idx=[],i;for(i=0;i<FRASES.length;i++)idx.push(i);
+    R.orden=mezclar(idx);
+  }
+  var f=FRASES[R.orden.pop()];
+  R.frase=f[0];R.pista=f[1];R.abiertas={};R.valor=null;
+  $('premio').textContent='GIRA';
+  pintarFrase();pintarTeclas();
+}
+function pintarFrase(){
+  $('pista').textContent=R.pista.toUpperCase();
+  var palabras=R.frase.split(' '),h='',i,j,w,c,tot=0,vis=0;
+  for(i=0;i<palabras.length;i++){
+    w=palabras[i];h+='<div class="palabra">';
+    for(j=0;j<w.length;j++){
+      c=w.charAt(j);tot++;
+      if(R.abiertas[c]){vis++;h+='<div class="casilla abierta">'+c+'</div>';}
+      else h+='<div class="casilla">'+c+'</div>';
+    }
+    h+='</div>';
+  }
+  $('frase').innerHTML=h;
+  pintarFaja(tot?vis/tot:0);
+}
+function pintarTeclas(){
+  var L='ABCDEFGHIJKLMNÑOPQRSTUVWXYZ',h='',i,c;
+  for(i=0;i<L.length;i++){
+    c=L.charAt(i);
+    h+='<button class="tecla'+(R.abiertas[c]?' gastada':'')+'" data-a="letra" data-c="'+c+'">'+c+'</button>';
+  }
+  $('teclas').innerHTML=h;
+}
+function girar(){
+  if(R.girando)return;
+  R.girando=true;
+  var n=SEGMENTOS.length,paso=360/n,i=Math.floor(Math.random()*n);
+  var objetivo=(360-(i*paso+paso/2))%360;
+  R.rot+=1440+((objetivo-(R.rot%360))%360+360)%360;
+  $('disco').style.transform='rotate('+R.rot+'deg)';
+  setTimeout(function(){
+    R.girando=false;
+    var s=SEGMENTOS[i];
+    if(s==='PIERDE'){$('premio').textContent='PIERDE TURNO';R.valor=null;pasarTurno();}
+    else if(s==='x2'){$('premio').textContent='DOBLE · 400 por letra';R.valor=400;}
+    else{$('premio').textContent=s+' por letra';R.valor=s;}
+  },3500);
+}
+function pedirLetra(c){
+  if(R.abiertas[c])return;
+  if(R.valor===null){$('premio').textContent='PRIMERO GIRA';return;}
+  R.abiertas[c]=true;
+  var veces=R.frase.split(c).length-1;
+  if(veces>0){
+    sumar(S.turno,R.valor*veces);
+    $('premio').textContent='+'+(R.valor*veces)+' PTS';
+  }else{
+    $('premio').textContent='NO HAY '+c;
+    pasarTurno();
+  }
+  R.valor=null;pintarFrase();pintarTeclas();
+}
+function pasarTurno(){S.turno=(S.turno+1)%S.eqs.length;R.valor=null;pintarTablero();}
+function resolverFrase(){
+  var i,c;
+  for(i=0;i<R.frase.length;i++){c=R.frase.charAt(i);if(c!==' ')R.abiertas[c]=true;}
+  sumar(S.turno,500);
+  $('premio').textContent='+500 AL RESOLVER';
+  pintarFrase();pintarTeclas();
+}
+
+/* ── Duelo ── */
+var D={usadas:{},actual:null,sel:[0,1,4,5,6],abierto:false,anunciado:false,aviso:''};
+var DUR=20,T={id:null,seg:0,el:'velo-reloj'};
+function arrancarT(elId,seg){
+  pararT();
+  T.seg=seg;T.el=elId;
+  var e=$(elId);
+  e.textContent=seg;
+  e.className='reloj-duelo';
+  T.id=setInterval(function(){
+    T.seg--;
+    var el=$(T.el);
+    if(T.seg>0){
+      el.textContent=T.seg;
+      if(T.seg<=5){el.className='reloj-duelo urge';sonar('tic');}
+    }else{
+      pararT();
+      el.textContent='¡SE ACABÓ EL TIEMPO!';
+      el.className='reloj-duelo fin';
+      sonar('mal');
+    }
+  },1000);
+}
+function pararT(){if(T.id){clearInterval(T.id);T.id=null;}}
+function duelPintar(){
+  var h='',c,f,k,cuenta=0,idx;
+  if(D.sel.length!==5){
+    var faltan=5-D.sel.length;
+    $('grilla').innerHTML='<div class="faltan">Elige '+faltan+' categoría'+(faltan===1?'':'s')+' más para armar el tablero.</div>';
+    D.abierto=true;
+    pintarPicker();
+    pintarFaja(0);
+    guardar();
+    return;
+  }
+  for(c=0;c<5;c++)h+='<div class="cat">'+BANCO[D.sel[c]][0]+'</div>';
+  for(f=0;f<5;f++)
+    for(c=0;c<5;c++){
+      idx=D.sel[c];k=idx+'-'+f;
+      if(D.usadas[k])cuenta++;
+      h+='<button class="casilla-pts'+(D.usadas[k]?' usada':'')+'" style="--v:'+TONOS[f]+'" data-a="abrir" data-c="'+c+'" data-f="'+f+'">'+VALORES[f]+'</button>';
+    }
+  $('grilla').innerHTML=h;
+  $('btn-dur').textContent='⏱ '+DUR+' s';
+  pintarPicker();
+  pintarFaja(cuenta/25);
+  guardar();
+  if(cuenta>=25&&!D.anunciado){
+    D.anunciado=true;
+    setTimeout(function(){verGanador('TABLERO COMPLETO');},500);
+  }
+}
+function verGanador(motivo){
+  var orden=[],i,h='',tope=0,empatados=0;
+  for(i=0;i<S.eqs.length;i++)orden.push(i);
+  orden.sort(function(a,b){return S.eqs[b].p-S.eqs[a].p;});
+  tope=S.eqs[orden[0]].p;
+  for(i=0;i<S.eqs.length;i++)if(S.eqs[i].p===tope)empatados++;
+  for(i=0;i<orden.length;i++)
+    h+='<div class="pcard'+(i===0&&empatados===1?' uno':'')+'" style="--eq:'+COLORES[orden[i]]+'">'+
+       (i===0&&empatados===1?'<div class="corona">👑</div>':'')+
+       '<div class="pos">'+(i+1)+'º LUGAR</div>'+
+       '<div class="nom">'+esc(S.eqs[orden[i]].n)+'</div>'+
+       '<div class="n">'+S.eqs[orden[i]].p+'</div></div>';
+  $('podio').innerHTML=h;
+  if(tope===0)$('final-t').textContent='TODAVÍA NADIE PUNTEA';
+  else if(empatados>1)$('final-t').textContent='¡EMPATE EN '+tope+'!';
+  else $('final-t').textContent='¡GANA '+S.eqs[orden[0]].n.toUpperCase()+'!';
+  $('final-s').textContent=motivo||'MARCADOR DE LA NOCHE';
+  $('final').className='final viva';
+  sonar('fin');
+}
+function pintarPicker(){
+  var p=$('picker'),h='',i,puesto;
+  p.style.display=D.abierto?'block':'none';
+  if(!D.abierto)return;
+  for(i=0;i<BANCO.length;i++){
+    puesto=D.sel.indexOf(i);
+    h+='<button class="cchip'+(puesto>=0?' on':'')+'" data-a="togcat" data-i="'+i+'">'+
+       (puesto>=0?'<span class="num">'+(puesto+1)+'</span>':'')+BANCO[i][0]+'</button>';
+  }
+  p.innerHTML=
+    '<div class="picker-tope">'+
+      '<span class="cuenta'+(D.sel.length===5?' full':'')+'">'+D.sel.length+' DE 5 ELEGIDAS</span>'+
+      (D.sel.length===5?'<button class="btn btn-oro" data-a="togPicker">Listo</button>':'')+
+    '</div>'+
+    '<div class="cchips">'+h+'</div>'+
+    '<p class="picker-pie">'+(D.aviso||'Toca una elegida para quitarla, luego toca la que quieres en su lugar.')+'</p>';
+  D.aviso='';
+}
+function abrir(col,f){
+  var idx=D.sel[col],par=BANCO[idx][1][f],h='',i,d='';
+  var pleno=VALORES[f],mitad=pleno/2;
+  D.actual={idx:idx,f:f};
+  for(i=0;i<=f;i++)d+='◆';
+  $('velo-cat').innerHTML=BANCO[idx][0]+' · <b style="color:'+TONOS[f]+'">'+pleno+' PUNTOS · '+d+'</b>';
+  h='';
+  for(i=0;i<S.eqs.length;i++)
+    h+='<span style="--eq:'+COLORES[i]+'">'+esc(S.eqs[i].n)+' · '+S.eqs[i].p+'</span>';
+  $('velo-marc').innerHTML=h;
+  h='';
+  $('velo-q').textContent=par[0];
+  $('velo-r').textContent=par[1];
+  $('velo-r').className='respuesta oculta';
+  $('velo-cita').textContent=par[2];
+  $('velo-cita').className='cita oculta';
+  h='<div class="grupo"><span class="et-grupo">ACERTÓ · '+pleno+' PUNTOS</span><div class="dar">';
+  for(i=0;i<S.eqs.length;i++)
+    h+='<button style="--eq:'+COLORES[i]+'" data-a="dar" data-i="'+i+'" data-p="'+pleno+'">+'+pleno+' · '+esc(S.eqs[i].n)+'</button>';
+  h+='</div></div><div class="grupo"><span class="et-grupo">SE LA ROBÓ EL RIVAL · '+mitad+' PUNTOS</span><div class="dar mitad">';
+  for(i=0;i<S.eqs.length;i++)
+    h+='<button style="--eq:'+COLORES[i]+'" data-a="dar" data-i="'+i+'" data-p="'+mitad+'">+'+mitad+' · '+esc(S.eqs[i].n)+'</button>';
+  h+='</div></div>';
+  $('velo-dar').innerHTML=h;
+  $('velo-aviso').textContent='';
+  $('velo-aviso').className='aviso-com';
+  pintarComs();
+  $('velo').className='velo viva';
+  arrancarT('velo-reloj',DUR);
+  sonar('abre');
+}
+function pintarComs(){
+  var h='',i,k,e;
+  for(i=0;i<S.eqs.length;i++){
+    e=S.eqs[i];
+    h+='<div class="com-eq" style="--eq:'+COLORES[i]+'"><span class="com-nom">'+esc(e.n)+'</span>';
+    for(k=0;k<COMS.length;k++){
+      var q=e.c[COMS[k][0]]||0;
+      h+='<button class="com-btn'+(q?'':' gastada')+'" data-a="usarCom" data-i="'+i+
+         '" data-k="'+COMS[k][0]+'" title="'+COMS[k][2]+'">'+COMS[k][1]+
+         (COMS[k][3]>1?'<i class="cuantos">'+q+'</i>':'')+'</button>';
+    }
+    h+='</div>';
+  }
+  $('velo-coms').innerHTML=h;
+}
+/* capítulos por libro, para no mandar a buscar en capítulos que no existen */
+var CAPS={'Génesis':50,'Éxodo':40,'Levítico':27,'Números':36,'Deuteronomio':34,
+'Josué':24,'Jueces':21,'1 Samuel':31,'2 Samuel':24,'1 Reyes':22,'2 Reyes':25,
+'Esdras':10,'Nehemías':13,'Ester':10,'Salmo':150,'Salmos':150,'Isaías':66,
+'Jeremías':52,'Ezequiel':48,'Daniel':12,'Oseas':14,'Miqueas':7,
+'Mateo':28,'Marcos':16,'Lucas':24,'Juan':21,'Hechos':28,'Romanos':16,
+'1 Corintios':16,'Filipenses':4,'1 Timoteo':6,'2 Timoteo':4,'Hebreos':13,
+'1 Pedro':5,'Apocalipsis':22};
+
+function rangoBiblico(cita){
+  var primera=String(cita).split(';')[0].trim();
+  var m=primera.match(/^(.*?[^\d\s])\s+(\d+)/);
+  if(!m)return primera.toUpperCase();
+  var libro=m[1],cap=+m[2],total=CAPS[libro]||cap+3;
+  var lo=Math.max(1,cap-1),hi=Math.min(total,lo+3);
+  lo=Math.max(1,hi-3);
+  return (lo===hi? libro+' '+lo : libro+' '+lo+'-'+hi).toUpperCase();
+}
+
+function cerrarVelo(){
+  pararT();
+  if(D.actual)D.usadas[D.actual.idx+'-'+D.actual.f]=true;
+  $('velo').className='velo';
+  D.actual=null;duelPintar();
+}
+
+/* ── Desempate ── */
+var TIE={orden:[],q:null};
+function nuevoTie(){
+  var i,h='',idx=[];
+  if(!TIE.orden.length){
+    for(i=0;i<DESEMPATE.length;i++)idx.push(i);
+    TIE.orden=mezclar(idx);
+  }
+  TIE.q=DESEMPATE[TIE.orden.pop()];
+  $('tie-q').textContent=TIE.q[0];
+  $('tie-r').textContent=TIE.q[1];$('tie-r').className='respuesta oculta';
+  $('tie-cita').textContent=TIE.q[2];$('tie-cita').className='cita oculta';
+  for(i=0;i<S.eqs.length;i++)
+    h+='<button style="--eq:'+COLORES[i]+'" data-a="tieDar" data-i="'+i+'">+500 · '+esc(S.eqs[i].n)+'</button>';
+  $('tie-dar').innerHTML=h;
+  arrancarT('tie-reloj',15);
+  sonar('abre');
+}
+function cerrarTie(){pararT();$('tie').className='velo tie';}
+
+/* ── reiniciar todo ── */
+var RESET={armado:false,t:null};
+function cancelarReset(){
+  if(RESET.t){clearTimeout(RESET.t);RESET.t=null;}
+  RESET.armado=false;
+  var b=$('btn-reset');
+  b.textContent='↻ REINICIAR TODO';
+  b.className='reset';
+}
+function reiniciarTodo(){
+  var i;
+  for(i=0;i<S.eqs.length;i++){S.eqs[i].p=0;S.eqs[i].c=comsNuevos();}
+  S.turno=0;
+  D.usadas={};D.anunciado=false;D.aviso='';D.actual=null;
+  TIE.orden=[];
+  R.abiertas={};R.valor=null;R.orden=[];
+  pararT();pararReloj();
+  olvidar();
+  $('velo').className='velo';
+  $('final').className='final';
+  $('tie').className='velo tie';
+  millNuevo();pararReloj();
+  pintarTablero();
+  duelPintar();
+  guardar();
+  ir('home');
+}
+
+/* ── acciones ── */
+var A={
+  irHome:function(){ir('home');},
+  irSetup:function(){ir('setup');},
+  irGuia:function(){ir('guia');},
+  irMill:function(){ir('mill');millNuevo();},
+  irRuleta:function(){ir('ruleta');construirDisco();nuevaFrase();},
+  irDuelo:function(){ir('duelo');duelPintar();},
+  masEq:function(){if(S.eqs.length<4){S.eqs.push(nuevoEq(NOMBRES[S.eqs.length]||'Equipo '+(S.eqs.length+1)));pintarTablero();}},
+  menosEq:function(){if(S.eqs.length>1){S.eqs.pop();S.turno=0;pintarTablero();}},
+  cero:function(){for(var i=0;i<S.eqs.length;i++){S.eqs[i].p=0;S.eqs[i].c=comsNuevos();}S.turno=0;olvidar();pintarTablero();guardar();},
+  sum:function(b){sumar(+b.getAttribute('data-i'),+b.getAttribute('data-p'));},
+  turno:function(b){S.turno=+b.getAttribute('data-i');pintarTablero();},
+  millNuevo:millNuevo,
+  resp:function(b){responder(+b.getAttribute('data-i'));},
+  c5050:usar5050, cpub:usarPublico, ccambio:usarCambio,
+  darMill:function(b){sumar(+b.getAttribute('data-i'),+b.getAttribute('data-p'));millNuevo();},
+  girar:girar,
+  letra:function(b){pedirLetra(b.getAttribute('data-c'));},
+  pasar:pasarTurno, resolver:resolverFrase, nuevaFrase:nuevaFrase,
+  duelNuevo:function(){D.usadas={};D.anunciado=false;duelPintar();},
+  tableroNuevo:function(){D.usadas={};D.anunciado=false;$('final').className='final';duelPintar();},
+  partidaNueva:function(){
+    var i;for(i=0;i<S.eqs.length;i++){S.eqs[i].p=0;S.eqs[i].c=comsNuevos();}
+    S.turno=0;D.usadas={};D.anunciado=false;
+    $('final').className='final';
+    pintarTablero();duelPintar();
+  },
+  cerrarFinal:function(){$('final').className='final';},
+  reset:function(){
+    var b=$('btn-reset');
+    if(!RESET.armado){
+      RESET.armado=true;
+      b.textContent='¿SEGURO? TOCA OTRA VEZ';
+      b.className='reset confirmar';
+      RESET.t=setTimeout(cancelarReset,5000);
+      return;
+    }
+    cancelarReset();
+    reiniciarTodo();
+  },
+  usarCom:function(b){
+    var i=+b.getAttribute('data-i'),k=b.getAttribute('data-k'),e=S.eqs[i],av=$('velo-aviso');
+    if(!e.c[k])return;
+    e.c[k]--;
+    if(k==='pub'){
+      pararT();
+      av.textContent='¡QUE EL PÚBLICO AYUDE A '+e.n.toUpperCase()+'!';
+      av.className='aviso-com pub';
+    }else if(k==='pista'){
+      pararT();
+      av.textContent='PISTA PARA '+e.n.toUpperCase();
+      av.className='aviso-com pista';
+    }else{
+      var cita=D.actual?BANCO[D.actual.idx][1][D.actual.f][2]:'';
+      av.innerHTML=e.n.toUpperCase()+' BUSCA EN <b>'+esc(rangoBiblico(cita))+'</b> · 1 MINUTO';
+      av.className='aviso-com biblia';
+      arrancarT('velo-reloj',60);
+    }
+    sonar('abre');
+    pintarComs();pintarMarcador();guardar();
+  },
+  devolverComs:function(){
+    var i;for(i=0;i<S.eqs.length;i++)S.eqs[i].c=comsNuevos();
+    pintarTablero();guardar();
+    if($('velo').className.indexOf('viva')>=0)pintarComs();
+  },
+  tie:function(){$('tie').className='velo tie viva';nuevoTie();},
+  tieOtra:nuevoTie,
+  tieR:function(){pararT();$('tie-r').className='respuesta';$('tie-cita').className='cita';},
+  tieCerrar:cerrarTie,
+  tieDar:function(b){
+    sumar(+b.getAttribute('data-i'),500);
+    sonar('fin');
+    cerrarTie();
+    $('final').className='final';
+    setTimeout(function(){verGanador('DESPUÉS DEL DESEMPATE');},400);
+  },
+  verGanador:function(){verGanador('MARCADOR DE LA NOCHE');},
+  mudo:function(){
+    AUDIO.mudo=!AUDIO.mudo;
+    $('btn-son').textContent=AUDIO.mudo?'🔇':'🔊';
+    $('btn-son').className=AUDIO.mudo?'son mudo':'son';
+    if(!AUDIO.mudo)sonar('abre');
+    guardar();
+  },
+  dur:function(){DUR=DUR===20?30:20;$('btn-dur').textContent='⏱ '+DUR+' s';guardar();},
+  togPicker:function(){D.abierto=!D.abierto;duelPintar();},
+  togcat:function(b){
+    var i=+b.getAttribute('data-i'),k=D.sel.indexOf(i);
+    if(k>=0){
+      D.sel.splice(k,1);
+      D.aviso='Quitaste '+BANCO[i][0]+'. Ahora elige la que va en su lugar.';
+    }else if(D.sel.length<5){
+      D.sel.push(i);
+      D.aviso=D.sel.length===5?'Listo, ya tienes las 5.':'';
+    }else{
+      D.aviso='Ya tienes 5. Quita una antes de poner otra.';
+    }
+    D.anunciado=false;duelPintar();
+  },
+  sorteo:function(){
+    var idx=[],i;for(i=0;i<BANCO.length;i++)idx.push(i);
+    D.sel=mezclar(idx).slice(0,5);D.usadas={};D.anunciado=false;duelPintar();
+  },
+  abrir:function(b){abrir(+b.getAttribute('data-c'),+b.getAttribute('data-f'));},
+  mostrarR:function(){pararT();$('velo-r').className='respuesta';$('velo-cita').className='cita';},
+  cerrarVelo:function(){sonar('mal');cerrarVelo();},
+  dar:function(b){
+    var p=+b.getAttribute('data-p');
+    sumar(+b.getAttribute('data-i'),p);
+    sonar(p===VALORES[D.actual?D.actual.f:0]?'bien':'medio');
+    cerrarVelo();
+  }
+};
+
+document.addEventListener('click',function(ev){
+  var el=ev.target;
+  while(el&&el!==document){
+    if(el.getAttribute&&el.getAttribute('data-a')){
+      var f=A[el.getAttribute('data-a')];
+      if(f){try{f(el);}catch(err){avisarError(err.message);}}
+      return;
+    }
+    el=el.parentNode;
+  }
+});
+document.addEventListener('input',function(ev){
+  var i=ev.target.getAttribute&&ev.target.getAttribute('data-nom');
+  if(i!==null&&i!==undefined&&i!==''){
+    S.eqs[+i].n=ev.target.value;
+    pintarMarcador();
+    $('pie-turno').textContent='Turno: '+S.eqs[S.turno].n;
+  }
+});
+document.addEventListener('keydown',function(ev){
+  if(ev.target.tagName==='INPUT')return;
+  var k=ev.key?ev.key.toLowerCase():'';
+  if(k==='escape'){
+    if($('tie').className.indexOf('viva')>=0)cerrarTie();
+    else if($('final').className.indexOf('viva')>=0)$('final').className='final';
+    else if($('velo').className.indexOf('viva')>=0)cerrarVelo();
+    else ir('home');
+  }
+  if(S.vista==='mill'&&'1234'.indexOf(k)>=0)responder(+k-1);
+  if(S.vista==='ruleta'&&k==='g'){ev.preventDefault();girar();}
+  if(k===' '){
+    if($('tie').className.indexOf('viva')>=0){ev.preventDefault();pararT();$('tie-r').className='respuesta';$('tie-cita').className='cita';}
+    else if($('velo').className.indexOf('viva')>=0){ev.preventDefault();$('velo-r').className='respuesta';$('velo-cita').className='cita';}
+  }
+});
+
+cargar();
+normalizar();
+$('btn-son').textContent=AUDIO.mudo?'🔇':'🔊';
+$('btn-son').className=AUDIO.mudo?'son mudo':'son';
+pintarTablero();
+pintarFaja(0);
+})();
+</script>
+</body>
+</html>
