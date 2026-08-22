@@ -34,7 +34,10 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--oro);outline-of
 .escudo{width:30px;height:30px;flex-shrink:0}
 .marca b{font-family:var(--display);font-size:clamp(.8rem,1.4vw,1.1rem);letter-spacing:.02em;display:block;line-height:1.05}
 .marca span{font-family:var(--mono);font-size:.6rem;color:var(--lila);letter-spacing:.16em;display:block;margin-top:-2px}
-.reset{margin-left:auto;flex-shrink:0;border:2px solid var(--noche-borde);border-radius:99px;padding:.45rem .85rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#8B84C4;white-space:nowrap}
+.deshacer{margin-left:auto;flex-shrink:0;border:2px solid var(--turquesa);border-radius:99px;padding:.45rem .85rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:var(--turquesa);white-space:nowrap}
+.deshacer:hover{background:var(--turquesa);color:#141033}
+.deshacer.off{border-color:var(--noche-borde);color:#4E4780;pointer-events:none}
+.reset{margin-left:.5rem;flex-shrink:0;border:2px solid var(--noche-borde);border-radius:99px;padding:.45rem .85rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#8B84C4;white-space:nowrap}
 .reset:hover{border-color:var(--cochinilla);color:var(--cochinilla)}
 .reset.confirmar{background:var(--cochinilla);border-color:var(--cochinilla);color:#fff;font-weight:700}
 .son{border:2px solid var(--noche-borde);border-radius:99px;width:2.4rem;height:2.4rem;font-size:1.1rem;margin-left:.5rem;flex-shrink:0;display:flex;align-items:center;justify-content:center}
@@ -301,6 +304,7 @@ main{flex:1;padding:clamp(1rem,3vh,2.2rem) clamp(.9rem,3vw,2.5rem)}
       </svg>
       <div><b>FUEGO CRUZADO</b><span>SOCIEDAD DE JÓVENES</span></div>
     </div>
+    <button class="deshacer off" id="btn-undo" data-a="deshacer">↶ DESHACER</button>
     <button class="reset" id="btn-reset" data-a="reset">↻ REINICIAR TODO</button>
     <button class="son" id="btn-son" data-a="mudo" aria-label="Activar o silenciar los sonidos">🔊</button>
   </div>
@@ -356,6 +360,7 @@ main{flex:1;padding:clamp(1rem,3vh,2.2rem) clamp(.9rem,3vw,2.5rem)}
           <li><b>Lee la pregunta en voz alta.</b> Tienen 20 segundos (o 30, según el botón ⏱).</li>
           <li><b>Si aciertan:</b> tocas el botón de puntaje completo con su nombre. Ahí sí revelas para que todos lo vean.</li>
           <li><b>Si fallan o se acaba el tiempo:</b> no reveles nada. Anuncia <em>"pasa al rival, diez segundos"</em>.</li>
+          <li><b>¿Abriste la casilla equivocada?</b> Toca <em>← Volver al tablero</em> (o <kbd>Esc</kbd>): cierra la pregunta y la casilla queda intacta para jugarla después.</li>
           <li><b>El rival responde una sola vez.</b> Si acierta, le das el botón de la mitad. Si falla, tocas <em>Nadie acertó</em> y ahí recién revelas.</li>
         </ol>
 
@@ -387,7 +392,8 @@ main{flex:1;padding:clamp(1rem,3vh,2.2rem) clamp(.9rem,3vw,2.5rem)}
         </div>
 
         <h3 class="tuto-t">Atajos mientras diriges</h3>
-        <p class="tuto-p"><kbd>Espacio</kbd> revela la respuesta · <kbd>Esc</kbd> cierra o vuelve al menú · <kbd>1</kbd>-<kbd>4</kbd> responden en el millonario · <kbd>G</kbd> gira la ruleta. El botón 🔊 silencia los sonidos y <b>↻ Reiniciar todo</b> borra la partida, pero pide confirmación.</p>
+        <p class="tuto-p"><kbd>Espacio</kbd> revela la respuesta · <kbd>Esc</kbd> cierra o vuelve al menú · <kbd>Z</kbd> deshace la última jugada · <kbd>1</kbd>-<kbd>4</kbd> responden en el millonario · <kbd>G</kbd> gira la ruleta.</p>
+        <p class="tuto-p" style="margin-top:.7rem">Si le diste los puntos al equipo equivocado, toca <b>↶ Deshacer</b> arriba: devuelve los puntos, libera la casilla y repone el comodín si se había gastado. Recuerda las últimas 20 jugadas. El botón 🔊 silencia los sonidos, y <b>↻ Reiniciar todo</b> borra la partida entera, pero pide confirmación.</p>
       </div>
     </section>
 
@@ -484,6 +490,7 @@ main{flex:1;padding:clamp(1rem,3vh,2.2rem) clamp(.9rem,3vw,2.5rem)}
     <span><kbd>1</kbd>–<kbd>4</kbd> responder</span>
     <span><kbd>Espacio</kbd> mostrar respuesta</span>
     <span><kbd>G</kbd> girar</span>
+    <span><kbd>Z</kbd> deshacer</span>
     <span id="pie-turno"></span>
   </div>
 </div>
@@ -497,6 +504,7 @@ main{flex:1;padding:clamp(1rem,3vh,2.2rem) clamp(.9rem,3vw,2.5rem)}
     <div class="respuesta oculta" id="velo-r">—</div>
     <div class="cita oculta" id="velo-cita">—</div>
     <div class="fila centro">
+      <button class="btn btn-fant" data-a="salirVelo">← Volver al tablero</button>
       <button class="btn btn-oro" data-a="mostrarR">Mostrar respuesta</button>
       <button class="btn btn-nadie" data-a="cerrarVelo">Nadie acertó · sin puntos</button>
     </div>
@@ -993,6 +1001,7 @@ function girar(){
 }
 function pedirLetra(c){
   if(R.abiertas[c])return;
+  marcar();
   if(R.valor===null){$('premio').textContent='PRIMERO GIRA';return;}
   R.abiertas[c]=true;
   var veces=R.frase.split(c).length-1;
@@ -1007,6 +1016,7 @@ function pedirLetra(c){
 }
 function pasarTurno(){S.turno=(S.turno+1)%S.eqs.length;R.valor=null;pintarTablero();}
 function resolverFrase(){
+  marcar();
   var i,c;
   for(i=0;i<R.frase.length;i++){c=R.frase.charAt(i);if(c!==' ')R.abiertas[c]=true;}
   sumar(S.turno,500);
@@ -1169,6 +1179,12 @@ function rangoBiblico(cita){
   return (lo===hi? libro+' '+lo : libro+' '+lo+'-'+hi).toUpperCase();
 }
 
+function salirVelo(){
+  pararT();
+  D.actual=null;
+  $('velo').className='velo';
+  duelPintar();
+}
 function cerrarVelo(){
   pararT();
   if(D.actual)D.usadas[D.actual.idx+'-'+D.actual.f]=true;
@@ -1196,6 +1212,31 @@ function nuevoTie(){
 }
 function cerrarTie(){pararT();$('tie').className='velo tie';}
 
+/* ── deshacer ── */
+var HIST=[];
+function marcar(){
+  HIST.push(JSON.stringify({e:S.eqs,t:S.turno,u:D.usadas,a:D.anunciado}));
+  if(HIST.length>20)HIST.shift();
+  pintarUndo();
+}
+function pintarUndo(){
+  var b=$('btn-undo');
+  b.className=HIST.length?'deshacer':'deshacer off';
+  b.textContent=HIST.length?'↶ DESHACER ('+HIST.length+')':'↶ DESHACER';
+}
+function deshacer(){
+  if(!HIST.length)return;
+  var d=JSON.parse(HIST.pop());
+  S.eqs=d.e;S.turno=d.t;D.usadas=d.u;D.anunciado=d.a;
+  normalizar();
+  $('final').className='final';
+  PREV=[];
+  pintarTablero();
+  if(S.vista==='duelo')duelPintar();
+  if($('velo').className.indexOf('viva')>=0)pintarComs();
+  pintarUndo();guardar();sonar('abre');
+}
+
 /* ── reiniciar todo ── */
 var RESET={armado:false,t:null};
 function cancelarReset(){
@@ -1210,7 +1251,7 @@ function reiniciarTodo(){
   for(i=0;i<S.eqs.length;i++){S.eqs[i].p=0;S.eqs[i].c=comsNuevos();}
   S.turno=0;
   D.usadas={};D.anunciado=false;D.aviso='';D.actual=null;
-  TIE.orden=[];
+  TIE.orden=[];HIST=[];pintarUndo();
   R.abiertas={};R.valor=null;R.orden=[];
   pararT();pararReloj();
   olvidar();
@@ -1235,12 +1276,12 @@ var A={
   masEq:function(){if(S.eqs.length<4){S.eqs.push(nuevoEq(NOMBRES[S.eqs.length]||'Equipo '+(S.eqs.length+1)));pintarTablero();}},
   menosEq:function(){if(S.eqs.length>1){S.eqs.pop();S.turno=0;pintarTablero();}},
   cero:function(){for(var i=0;i<S.eqs.length;i++){S.eqs[i].p=0;S.eqs[i].c=comsNuevos();}S.turno=0;olvidar();pintarTablero();guardar();},
-  sum:function(b){sumar(+b.getAttribute('data-i'),+b.getAttribute('data-p'));},
+  sum:function(b){marcar();sumar(+b.getAttribute('data-i'),+b.getAttribute('data-p'));},
   turno:function(b){S.turno=+b.getAttribute('data-i');pintarTablero();},
   millNuevo:millNuevo,
   resp:function(b){responder(+b.getAttribute('data-i'));},
   c5050:usar5050, cpub:usarPublico, ccambio:usarCambio,
-  darMill:function(b){sumar(+b.getAttribute('data-i'),+b.getAttribute('data-p'));millNuevo();},
+  darMill:function(b){marcar();sumar(+b.getAttribute('data-i'),+b.getAttribute('data-p'));millNuevo();},
   girar:girar,
   letra:function(b){pedirLetra(b.getAttribute('data-c'));},
   pasar:pasarTurno, resolver:resolverFrase, nuevaFrase:nuevaFrase,
@@ -1253,6 +1294,7 @@ var A={
     pintarTablero();duelPintar();
   },
   cerrarFinal:function(){$('final').className='final';},
+  deshacer:deshacer,
   reset:function(){
     var b=$('btn-reset');
     if(!RESET.armado){
@@ -1268,6 +1310,7 @@ var A={
   usarCom:function(b){
     var i=+b.getAttribute('data-i'),k=b.getAttribute('data-k'),e=S.eqs[i],av=$('velo-aviso');
     if(!e.c[k])return;
+    marcar();
     e.c[k]--;
     if(k==='pub'){
       pararT();
@@ -1296,6 +1339,7 @@ var A={
   tieR:function(){pararT();$('tie-r').className='respuesta';$('tie-cita').className='cita';},
   tieCerrar:cerrarTie,
   tieDar:function(b){
+    marcar();
     sumar(+b.getAttribute('data-i'),500);
     sonar('fin');
     cerrarTie();
@@ -1331,8 +1375,10 @@ var A={
   },
   abrir:function(b){abrir(+b.getAttribute('data-c'),+b.getAttribute('data-f'));},
   mostrarR:function(){pararT();$('velo-r').className='respuesta';$('velo-cita').className='cita';},
-  cerrarVelo:function(){sonar('mal');cerrarVelo();},
+  salirVelo:salirVelo,
+  cerrarVelo:function(){marcar();sonar('mal');cerrarVelo();},
   dar:function(b){
+    marcar();
     var p=+b.getAttribute('data-p');
     sumar(+b.getAttribute('data-i'),p);
     sonar(p===VALORES[D.actual?D.actual.f:0]?'bien':'medio');
@@ -1365,11 +1411,12 @@ document.addEventListener('keydown',function(ev){
   if(k==='escape'){
     if($('tie').className.indexOf('viva')>=0)cerrarTie();
     else if($('final').className.indexOf('viva')>=0)$('final').className='final';
-    else if($('velo').className.indexOf('viva')>=0)cerrarVelo();
+    else if($('velo').className.indexOf('viva')>=0)salirVelo();
     else ir('home');
   }
   if(S.vista==='mill'&&'1234'.indexOf(k)>=0)responder(+k-1);
   if(S.vista==='ruleta'&&k==='g'){ev.preventDefault();girar();}
+  if(k==='z'){ev.preventDefault();deshacer();}
   if(k===' '){
     if($('tie').className.indexOf('viva')>=0){ev.preventDefault();pararT();$('tie-r').className='respuesta';$('tie-cita').className='cita';}
     else if($('velo').className.indexOf('viva')>=0){ev.preventDefault();$('velo-r').className='respuesta';$('velo-cita').className='cita';}
@@ -1381,6 +1428,7 @@ normalizar();
 $('btn-son').textContent=AUDIO.mudo?'🔇':'🔊';
 $('btn-son').className=AUDIO.mudo?'son mudo':'son';
 pintarTablero();
+pintarUndo();
 pintarFaja(0);
 })();
 </script>
